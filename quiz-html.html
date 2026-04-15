@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>School Box Quiz Builder</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: system-ui, sans-serif; }
+  input[type=range] { accent-color: #2563eb; }
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+
+<div class="max-w-2xl mx-auto">
+  <!-- HEADER -->
+  <div class="mb-8 text-center">
+    <div class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-3">📚 School Box LMS</div>
+    <h1 class="text-2xl font-bold text-gray-900">Quiz Builder</h1>
+    <p class="text-gray-500 text-sm mt-1">AI-powered · MCQ & Drag-and-Drop · School Box JSON export</p>
+  </div>
+
+  <!-- FORM -->
+  <div id="form-section" class="bg-white rounded-2xl shadow-sm border p-6 space-y-5">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Area of Study / Topic</label>
+      <input id="topic" type="text" placeholder="e.g. Photosynthesis, World War II, Algebra..."
+        class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Year Level</label>
+      <select id="year-level" class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
+        <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
+        <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
+        <option>Year 11</option><option>Year 12</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Number of Questions: <span id="q-count-label" class="text-blue-600">5</span></label>
+      <input id="q-count" type="range" min="4" max="20" value="5"
+        oninput="document.getElementById('q-count-label').textContent=this.value"
+        class="w-full" />
+      <div class="flex justify-between text-xs text-gray-400 mt-1"><span>4</span><span>20</span></div>
+    </div>
+    <p id="form-error" class="text-red-500 text-sm hidden"></p>
+    <button onclick="generateQuiz()" id="gen-btn"
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
+      ✨ Generate Quiz
+    </button>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview-section" class="hidden space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 id="preview-title" class="font-bold text-gray-800"></h2>
+        <p id="preview-meta" class="text-sm text-gray-500"></p>
+      </div>
+      <button onclick="resetForm()" class="text-sm text-gray-500 hover:text-gray-700 underline">← New Quiz</button>
+    </div>
+    <div id="questions-list" class="space-y-4"></div>
+    <div class="flex gap-3 pt-2 pb-6">
+      <button onclick="generateQuiz()" id="regen-btn"
+        class="flex-1 border-2 border-blue-600 text-blue-600 font-semibold py-3 rounded-xl hover:bg-blue-50 transition-colors text-sm">
+        🔄 Regenerate
+      </button>
+      <button onclick="exportJSON()"
+        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition-colors text-sm">
+        ⬇️ Export .json
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let questions = [];
+let editIdx = null;
+
+const BADGE = {
+  mcq: ["bg-blue-100 text-blue-700", "MCQ"],
+  "drag-blank": ["bg-purple-100 text-purple-700", "Drag: Fill Blank"],
+  "drag-order": ["bg-green-100 text-green-700", "Drag: Order"]
+};
+
+function sbUUID() {
+  const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
+  return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
+}
+
+function buildSchoolBoxJSON(qs, topic) {
+  const actRef = sbUUID(), itemRef = sbUUID();
+  const qMap = {}, widgetRefs = [], qMeta = [];
+
+  qs.forEach(q => {
+    const ref = sbUUID();
+    widgetRefs.push({ reference: ref, widget_type: "question" });
+
+    if (q.type === "mcq") {
+      qMeta.push({ reference: ref, type: "mcq" });
+      qMap[ref] = {
+        type: "mcq", widget_type: "response", reference: ref,
+        data: {
+          options: q.options.map((l, i) => ({ label: `<h4>${l}</h4>\n`, value: String(i) })),
+          stimulus: `<h3>${q.question}</h3>\n`, type: "mcq",
+          validation: { scoring_type: "exactMatch", valid_response: { score: 1, value: [String(q.correct)] } },
+          ui_style: { type: "horizontal" }
+        },
+        metadata: { name: "Multiple choice – standard", template_reference: "9e8149bd-e4d8-4dd6-a751-1a113a4b9163" }
+      };
+    } else if (q.type === "drag-blank") {
+      qMeta.push({ reference: ref, type: "clozeassociation" });
+      const template = `<h4>${q.sentence.replace(/___/g, "{{response}}")}</h4>\n`;
+      const all = [...q.blanks, ...q.distractors].sort(() => Math.random() - 0.5);
+      qMap[ref] = {
+        type: "clozeassociation", widget_type: "response", reference: ref,
+        data: {
+          possible_responses: all.map(r => `<h4>${r}</h4>\n`),
+          response_container: { pointer: "left" },
+          stimulus: `<h4>Drag and drop to fill in the blanks</h4>\n`,
+          template, type: "clozeassociation",
+          validation: { scoring_type: "exactMatch", valid_response: { score: 1, value: q.blanks.map(() => null) } }
+        },
+        metadata: { name: "Cloze with drag & drop", template_reference: "51a8c1e7-f34f-4faf-b211-da458e891fcb" }
+      };
+    } else if (q.type === "drag-order") {
+      qMeta.push({ reference: ref, type: "clozeassociation" });
+      const ordered = q.correctOrder.map(i => q.items[i]);
+      const template = ordered.map(() => "{{response}}").join("<br/>");
+      qMap[ref] = {
+        type: "clozeassociation", widget_type: "response", reference: ref,
+        data: {
+          possible_responses: [...q.items].sort(() => Math.random() - 0.5).map(r => `<h4>${r}</h4>\n`),
+          response_container: { pointer: "left" },
+          stimulus: `<h4>${q.question}</h4>\n`,
+          template: `<h4>${template}</h4>\n`, type: "clozeassociation",
+          validation: { scoring_type: "exactMatch", valid_response: { score: 1, value: ordered.map(() => null) } }
+        },
+        metadata: { name: "Order with drag & drop", template_reference: "51a8c1e7-f34f-4faf-b211-da458e891fcb" }
+      };
+    }
+  });
+
+  return {
+    settings: {
+      title: `${topic} Quiz`, description: "<p>Complete this quiz to demonstrate your understanding.</p>",
+      workType: "Learning Task", dates: { publishAt: null, openAt: null, dueAt: null, closeAt: null },
+      weight: 0, shuffleItems: 0, promptsMode: 0, maxAttempts: 0, duration: 0,
+      readingTimeDuration: 0, completionMessage: "", defaultOpenSpan: null,
+      curriculumNodes: [], markType: "raw", gradeGroup: null,
+      markScheme: "TotalMarkFractional", markVisibility: 2,
+      creator: null, context: null, sequence: null
+    },
+    assets: [],
+    content: {
+      activities: {
+        [actRef]: {
+          reference: actRef, title: null, description: "",
+          data: {
+            rendering_type: "assess",
+            items: [{ reference: itemRef, id: itemRef }],
+            config: {
+              configuration: { idle_timeout: { interval: 300 } },
+              navigation: { show_intro: false, show_outro: false },
+              regions: {
+                "top-left": [{ type: "title_element" }],
+                "top-right": [{ type: "itemcount_element" }, { type: "reading_timer_element" }, { type: "timer_element" }],
+                items: [{ type: "progress_element" }, { type: "slider_element" }],
+                right: [{ type: "save_button" }, { type: "reviewscreen_button" }, { type: "resource_button" }, { type: "flagitem_button" }, { type: "masking_button" }, { type: "verticaltoc_element" }],
+                "bottom-left": [{ type: "previous_button", show_label_option: true }],
+                "bottom-right": [{ type: "next_button" }]
+              }
+            }
+          },
+          status: "published",
+          adaptive: { difficulty: null, operational_exposure: null, seeding_exposure: null }
+        }
+      },
+      items: {
+        [itemRef]: {
+          reference: itemRef, title: topic, workflow: null, metadata: null,
+          note: "", source: "",
+          definition: { widgets: widgetRefs, template: "dynamic" },
+          description: "", status: "published", questions: qMeta, features: []
+        }
+      },
+      questions: qMap,
+      features: []
+    }
+  };
+}
+
+async function generateQuiz() {
+  const topic = document.getElementById("topic").value.trim();
+  const yearLevel = document.getElementById("year-level").value;
+  const n = parseInt(document.getElementById("q-count").value);
+  if (!topic) { showError("Please enter a topic."); return; }
+
+  setLoading(true);
+  const nMCQ = Math.ceil(n / 2);
+  const nBlank = Math.floor((n - nMCQ) / 2);
+  const nOrder = n - nMCQ - nBlank;
+
+  const prompt = `You are an educational quiz creator for Australian schools.
+Create a quiz for ${yearLevel} students on: "${topic}".
+Generate exactly ${n} questions:
+- ${nMCQ} MCQ questions
+- ${nBlank} drag-and-drop fill-in-the-blank questions
+- ${nOrder} drag-and-drop order-the-steps questions
+
+Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
+
+MCQ: {"type":"mcq","question":"...","options":["A","B","C","D"],"correct":0}
+Drag-blank: {"type":"drag-blank","question":"Drag and drop to fill in the blanks.","sentence":"The ___ converts sunlight into energy.","blanks":["chloroplast"],"distractors":["mitochondria","nucleus","ribosome"]}
+Drag-order: {"type":"drag-order","question":"Order the following steps correctly.","items":["Step A","Step B","Step C","Step D"],"correctOrder":[0,1,2,3]}
+
+Return ONLY the JSON array.`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "YOUR_API_KEY_HERE",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 3000, messages: [{ role: "user", content: prompt }] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content.map(b => b.text || "").join("");
+    questions = JSON.parse(raw.replace(/```json|```/g, "").trim());
+    showPreview(topic, yearLevel);
+  } catch (e) {
+    showError("Failed to generate questions: " + e.message);
+  }
+  setLoading(false);
+}
+
+function showPreview(topic, yearLevel) {
+  document.getElementById("form-section").classList.add("hidden");
+  document.getElementById("preview-section").classList.remove("hidden");
+  document.getElementById("preview-title").textContent = topic;
+  document.getElementById("preview-meta").textContent = `${yearLevel} · ${questions.length} questions`;
+  renderQuestions();
+}
+
+function resetForm() {
+  document.getElementById("form-section").classList.remove("hidden");
+  document.getElementById("preview-section").classList.add("hidden");
+  questions = [];
+}
+
+function renderQuestions() {
+  const list = document.getElementById("questions-list");
+  list.innerHTML = "";
+  questions.forEach((q, i) => list.appendChild(createCard(q, i)));
+}
+
+function createCard(q, idx) {
+  const [badgeCls, badgeLabel] = BADGE[q.type];
+  const div = document.createElement("div");
+  div.className = "border rounded-xl p-4 bg-white shadow-sm space-y-3";
+
+  let body = `
+    <div class="flex items-start justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold px-2 py-1 rounded-full ${badgeCls}">${badgeLabel}</span>
+        <span class="text-xs text-gray-400">Q${idx + 1}</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="startEdit(${idx})" class="text-xs text-blue-600 hover:underline">Edit</button>
+        <button onclick="deleteQ(${idx})" class="text-xs text-red-500 hover:underline">Delete</button>
+      </div>
+    </div>
+    <p class="text-sm font-medium text-gray-800">${q.question}</p>`;
+
+  if (q.type === "mcq") {
+    body += `<ul class="space-y-1">${q.options.map((o, i) =>
+      `<li class="text-sm px-3 py-1.5 rounded-lg ${i === q.correct ? "bg-green-50 text-green-700 font-semibold" : "bg-gray-50 text-gray-600"}">${String.fromCharCode(65 + i)}. ${o} ${i === q.correct ? "✓" : ""}</li>`
+    ).join("")}</ul>`;
+  } else if (q.type === "drag-blank") {
+    body += `
+      <p class="text-sm bg-purple-50 px-3 py-2 rounded-lg text-purple-800 font-mono">${q.sentence}</p>
+      <p class="text-xs text-gray-500">Answer: <span class="font-semibold text-green-700">${q.blanks.join(", ")}</span></p>
+      <p class="text-xs text-gray-500">Distractors: ${q.distractors.join(", ")}</p>`;
+  } else if (q.type === "drag-order") {
+    body += `<ol class="space-y-1">${q.correctOrder.map((origIdx, pos) =>
+      `<li class="text-sm bg-green-50 text-green-800 px-3 py-1.5 rounded-lg flex gap-2"><span class="font-semibold">${pos + 1}.</span> ${q.items[origIdx]}</li>`
+    ).join("")}</ol>`;
+  }
+
+  div.innerHTML = body;
+  return div;
+}
+
+function deleteQ(idx) {
+  questions.splice(idx, 1);
+  renderQuestions();
+  document.getElementById("preview-meta").textContent =
+    `${document.getElementById("year-level").value} · ${questions.length} questions`;
+}
+
+function startEdit(idx) {
+  editIdx = idx;
+  const q = questions[idx];
+  const [badgeCls, badgeLabel] = BADGE[q.type];
+  const card = document.getElementById("questions-list").children[idx];
+
+  let html = `
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-xs font-semibold px-2 py-1 rounded-full ${badgeCls}">${badgeLabel}</span>
+      <span class="text-xs text-gray-400">Q${idx + 1}</span>
+    </div>`;
+
+  if (q.type === "mcq") {
+    html += `<textarea id="e-question" class="w-full border rounded p-2 text-sm mb-3" rows="3">${q.question}</textarea>`;
+    q.options.forEach((opt, i) => {
+      html += `<div class="flex items-center gap-2 mb-2">
+        <input type="radio" name="correct" value="${i}" ${q.correct === i ? "checked" : ""} />
+        <input class="border rounded p-1 text-sm flex-1" id="e-opt-${i}" value="${opt}" />
+        <span class="text-xs text-green-600">${q.correct === i ? "✓ Correct" : ""}</span>
+      </div>`;
+    });
+  } else if (q.type === "drag-blank") {
+    html += `
+      <textarea id="e-question" class="w-full border rounded p-2 text-sm mb-2" rows="2">${q.question}</textarea>
+      <label class="text-xs font-semibold text-gray-600">Sentence (use ___ for blank)</label>
+      <input id="e-sentence" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.sentence}" />
+      <label class="text-xs font-semibold text-gray-600">Correct Answer(s) — comma separated</label>
+      <input id="e-blanks" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.blanks.join(", ")}" />
+      <label class="text-xs font-semibold text-gray-600">Distractors — comma separated</label>
+      <input id="e-distractors" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.distractors.join(", ")}" />`;
+  } else if (q.type === "drag-order") {
+    html += `<textarea id="e-question" class="w-full border rounded p-2 text-sm mb-2" rows="2">${q.question}</textarea>
+      <label class="text-xs font-semibold text-gray-600">Items (in correct order)</label>`;
+    q.correctOrder.forEach((origIdx, pos) => {
+      html += `<div class="flex items-center gap-2 mt-1">
+        <span class="text-xs text-gray-400 w-5">${pos + 1}.</span>
+        <input class="border rounded p-1 text-sm flex-1 e-item" data-orig="${origIdx}" value="${q.items[origIdx]}" />
+      </div>`;
+    });
+  }
+
+  html += `<div class="flex gap-2 mt-3">
+    <button onclick="saveEdit()" class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700">Save</button>
+    <button onclick="renderQuestions()" class="bg-gray-100 text-gray-700 text-sm px-4 py-1.5 rounded-lg hover:bg-gray-200">Cancel</button>
+  </div>`;
+
+  card.innerHTML = html;
+}
+
+function saveEdit() {
+  const q = questions[editIdx];
+  q.question = document.getElementById("e-question").value;
+  if (q.type === "mcq") {
+    q.options = q.options.map((_, i) => document.getElementById(`e-opt-${i}`).value);
+    q.correct = parseInt(document.querySelector('input[name="correct"]:checked').value);
+  } else if (q.type === "drag-blank") {
+    q.sentence = document.getElementById("e-sentence").value;
+    q.blanks = document.getElementById("e-blanks").value.split(",").map(s => s.trim());
+    q.distractors = document.getElementById("e-distractors").value.split(",").map(s => s.trim());
+  } else if (q.type === "drag-order") {
+    document.querySelectorAll(".e-item").forEach(inp => {
+      q.items[parseInt(inp.dataset.orig)] = inp.value;
+    });
+  }
+  renderQuestions();
+}
+
+function exportJSON() {
+  const topic = document.getElementById("topic").value.trim();
+  const payload = buildSchoolBoxJSON(questions, topic);
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${topic.replace(/\s+/g, "_")}_quiz.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function setLoading(on) {
+  document.getElementById("gen-btn").textContent = on ? "⏳ Generating Questions..." : "✨ Generate Quiz";
+  document.getElementById("gen-btn").disabled = on;
+  const regen = document.getElementById("regen-btn");
+  if (regen) { regen.textContent = on ? "Regenerating..." : "🔄 Regenerate"; regen.disabled = on; }
+}
+
+function showError(msg) {
+  const el = document.getElementById("form-error");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+  setTimeout(() => el.classList.add("hidden"), 5000);
+}
+</script>
+</body>
+</html>
