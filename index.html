@@ -13,6 +13,31 @@
 <body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
 
 <div class="max-w-2xl mx-auto">
+
+  <!-- API KEY SCREEN -->
+  <div id="key-screen" class="bg-white rounded-2xl shadow-sm border p-8 space-y-5 mt-8">
+    <div class="text-center">
+      <div class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">📚 School Box LMS</div>
+      <h1 class="text-2xl font-bold text-gray-900">Quiz Builder</h1>
+      <p class="text-gray-500 text-sm mt-1">Enter your Gemini API key to get started</p>
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Google Gemini API Key</label>
+      <input id="api-key-input" type="password" placeholder="AIza..."
+        class="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        onkeydown="if(event.key==='Enter') saveKey()" />
+      <p class="text-xs text-gray-400 mt-2">🔒 Your key is only stored in memory for this session and never sent anywhere except the Gemini API.</p>
+    </div>
+    <p id="key-error" class="text-red-500 text-sm hidden"></p>
+    <button onclick="saveKey()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
+      Continue →
+    </button>
+    <p class="text-xs text-center text-gray-400">Don't have a key? Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-500 hover:underline">aistudio.google.com</a></p>
+  </div>
+
+  <!-- MAIN APP (hidden until key entered) -->
+  <div id="main-app" class="hidden">
+
   <!-- HEADER -->
   <div class="mb-8 text-center">
     <div class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-3">📚 School Box LMS</div>
@@ -71,10 +96,26 @@
       </button>
     </div>
   </div>
+
+  </div><!-- end main-app -->
 </div>
 
 <script>
+let API_KEY = "";
 let questions = [];
+
+function saveKey() {
+  const k = document.getElementById("api-key-input").value.trim();
+  if (!k.startsWith("AIza")) {
+    const el = document.getElementById("key-error");
+    el.textContent = "Please enter a valid Gemini API key (starts with AIza...)";
+    el.classList.remove("hidden");
+    return;
+  }
+  API_KEY = k;
+  document.getElementById("key-screen").classList.add("hidden");
+  document.getElementById("main-app").classList.remove("hidden");
+}
 let editIdx = null;
 
 const BADGE = {
@@ -217,19 +258,17 @@ Drag-order: {"type":"drag-order","question":"Order the following steps correctly
 Return ONLY the JSON array.`;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": "YOUR_API_KEY_HERE",
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 3000, messages: [{ role: "user", content: prompt }] })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 3000 }
+      })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
-    const raw = data.content.map(b => b.text || "").join("");
+    const raw = data.candidates[0].content.parts[0].text;
     questions = JSON.parse(raw.replace(/```json|```/g, "").trim());
     showPreview(topic, yearLevel);
   } catch (e) {
