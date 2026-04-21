@@ -7,8 +7,8 @@ export default async function handler(req, res) {
   // Allow requests from your GitHub Pages domain
   // Replace with your actual GitHub Pages URL
   const allowedOrigins = [
-    "https://YOUR-USERNAME.github.io",
-    "http://localhost:5500", // for local testing
+    "https://wesdlpteam.github.io",
+    "http://localhost:5500",
   ];
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
