@@ -155,9 +155,6 @@ function getSelectedTypes() {
   return [...document.querySelectorAll("input[data-type]:checked")].map(el => el.dataset.type);
 }
 
-// No key screen needed — key is stored securely on Vercel
-function saveKey() {}
-
 function sbUUID() {
   const s4 = () => Math.floor((1+Math.random())*0x10000).toString(16).slice(1);
   return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
