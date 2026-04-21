@@ -28,7 +28,7 @@
   .btn-gold:hover, .btn-outline:hover { opacity: 0.85; }
   .btn-small-purple { background: var(--purple); color: white; border: none; border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer; }
   .btn-small-light { background: var(--light-purple); color: var(--purple); border: none; border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer; }
-  label.type-option { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--grey-purple); background: white; cursor: pointer; transition: all 0.15s; }
+  label.type-option { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--grey-purple); background: white; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; }
   label.type-option.selected { border-color: var(--purple); background: var(--light-purple); }
   .q-card { background: white; border: 1px solid var(--grey-purple); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
   .badge { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 999px; display: inline-block; }
@@ -48,80 +48,63 @@
   a { color: var(--gold); }
 </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-<div class="max-w-2xl mx-auto">
+<body>
+<div class="max-w-2xl mx-auto" style="padding:24px 16px;">
 
-  <!-- API KEY SCREEN -->
-  <div id="key-screen" class="card" style="max-width:480px;margin:40px auto;">
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:12px;">📚 Wesley College · School Box LMS</div>
-      <h1 style="font-size:24px;margin:0 0 6px;">Quiz Builder</h1>
-      <p class="subtitle">Enter your Gemini API key to get started</p>
-    </div>
-    <label class="label">Google Gemini API Key</label>
-    <input id="api-key-input" type="password" placeholder="AIza..." class="input" onkeydown="if(event.key==='Enter') saveKey()" style="margin-bottom:6px;"/>
-    <p style="font-size:11px;color:#999;margin:4px 0 12px;">🔒 Stored in memory only — never saved to disk.</p>
-    <p id="key-error" class="hidden" style="color:#b91c1c;font-size:13px;margin-bottom:8px;"></p>
-    <button onclick="saveKey()" class="btn-primary">Continue →</button>
-    <p style="text-align:center;font-size:11px;color:#999;margin-top:12px;">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></p>
+  <!-- HEADER -->
+  <div style="text-align:center;margin-bottom:28px;padding-top:16px;">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:12px;">📚 Wesley College · School Box LMS</div>
+    <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">Quiz Builder</h1>
+    <p class="subtitle">AI-powered · MCQ, Drag & Drop, Match · School Box JSON export</p>
   </div>
 
-  <!-- MAIN APP -->
-  <div id="main-app" style="max-width:640px;margin:0 auto;">
-    <div style="text-align:center;margin-bottom:28px;padding-top:16px;">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:12px;">📚 Wesley College · School Box LMS</div>
-      <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">Quiz Builder</h1>
-      <p class="subtitle">AI-powered · MCQ, Drag & Drop, Match · School Box JSON export</p>
+  <!-- FORM -->
+  <div id="form-section" class="card" style="margin-bottom:16px;">
+    <div style="margin-bottom:18px;">
+      <label class="label">Area of Study / Topic</label>
+      <input id="topic" type="text" placeholder="e.g. Photosynthesis, World War II, Algebra..." class="input"/>
     </div>
-
-    <!-- FORM -->
-    <div id="form-section" class="card" style="margin-bottom:16px;">
-      <div style="margin-bottom:18px;">
-        <label class="label">Area of Study / Topic</label>
-        <input id="topic" type="text" placeholder="e.g. Photosynthesis, World War II, Algebra..." class="input"/>
-      </div>
-      <div style="margin-bottom:18px;">
-        <label class="label">Year Level</label>
-        <select id="year-level" class="input" style="background:white;">
-          <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
-          <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
-          <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
-          <option>Year 11</option><option>Year 12</option>
-        </select>
-      </div>
-      <div style="margin-bottom:18px;">
-        <label class="label">Number of Questions: <span id="q-count-label" style="color:var(--gold)">6</span></label>
-        <input id="q-count" type="range" min="4" max="20" value="6" oninput="document.getElementById('q-count-label').textContent=this.value"/>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:#999;margin-top:2px;"><span>4</span><span>20</span></div>
-      </div>
-      <div style="margin-bottom:20px;">
-        <label class="label">Question Types <span style="font-weight:400;color:#999;">— select all you want included</span></label>
-        <div id="type-checkboxes"></div>
-      </div>
-      <p id="form-error" class="hidden" style="color:#b91c1c;font-size:13px;margin-bottom:8px;"></p>
-      <button onclick="generateQuiz()" id="gen-btn" class="btn-primary">✨ Generate Quiz</button>
+    <div style="margin-bottom:18px;">
+      <label class="label">Year Level</label>
+      <select id="year-level" class="input" style="background:white;">
+        <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
+        <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
+        <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
+        <option>Year 11</option><option>Year 12</option>
+      </select>
     </div>
+    <div style="margin-bottom:18px;">
+      <label class="label">Number of Questions: <span id="q-count-label" style="color:var(--gold)">6</span></label>
+      <input id="q-count" type="range" min="4" max="20" value="6" oninput="document.getElementById('q-count-label').textContent=this.value"/>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#999;margin-top:2px;"><span>4</span><span>20</span></div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label class="label">Question Types <span style="font-weight:400;color:#999;">— select all you want included</span></label>
+      <div id="type-checkboxes"></div>
+    </div>
+    <p id="form-error" class="hidden" style="color:#b91c1c;font-size:13px;margin-bottom:8px;"></p>
+    <button onclick="generateQuiz()" id="gen-btn" class="btn-primary">✨ Generate Quiz</button>
+  </div>
 
-    <!-- PREVIEW -->
-    <div id="preview-section" class="hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div>
-          <h2 id="preview-title" style="margin:0;color:var(--purple);font-weight:700;"></h2>
-          <p id="preview-meta" class="subtitle" style="margin:2px 0 0;"></p>
-        </div>
-        <button onclick="resetForm()" style="font-size:13px;color:var(--purple);text-decoration:underline;background:none;border:none;cursor:pointer;">← New Quiz</button>
+  <!-- PREVIEW -->
+  <div id="preview-section" class="hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <h2 id="preview-title" style="margin:0;color:var(--purple);font-weight:700;"></h2>
+        <p id="preview-meta" class="subtitle" style="margin:2px 0 0;"></p>
       </div>
-      <div id="questions-list"></div>
-      <div style="display:flex;gap:12px;padding:8px 0 24px;">
-        <button onclick="generateQuiz()" id="regen-btn" class="btn-outline">🔄 Regenerate</button>
-        <button onclick="exportJSON()" class="btn-gold">⬇️ Export .json</button>
-      </div>
+      <button onclick="resetForm()" style="font-size:13px;color:var(--purple);text-decoration:underline;background:none;border:none;cursor:pointer;">← New Quiz</button>
+    </div>
+    <div id="questions-list"></div>
+    <div style="display:flex;gap:12px;padding:8px 0 24px;">
+      <button onclick="generateQuiz()" id="regen-btn" class="btn-outline">🔄 Regenerate</button>
+      <button onclick="exportJSON()" class="btn-gold">⬇️ Export .json</button>
     </div>
   </div>
+
 </div>
 
 <script>
-// Replace this with your actual Vercel deployment URL
 const VERCEL_API = "https://wi-se-quiz-gen.vercel.app/api/generate";
 
 let questions = [];
@@ -134,7 +117,6 @@ const QUESTION_TYPES = [
   { key:"match",      label:"Match List",             desc:"Match items on the left to the right",  badgeBg:"#cec3cf", badgeText:"#2d1a33", default:true  },
 ];
 
-// Render checkboxes
 const cb = document.getElementById("type-checkboxes");
 QUESTION_TYPES.forEach(t => {
   const div = document.createElement("label");
@@ -265,16 +247,16 @@ function renderQuestions() {
 
 function createCard(q, idx) {
   const div = document.createElement("div");
-  div.className = "border rounded-xl p-4 bg-white shadow-sm space-y-3";
-  const badge = `<span class="text-xs font-semibold px-2 py-1 rounded-full ${BADGES[q.type]}">${LABELS[q.type]}</span>`;
-  let body = `<div class="flex items-start justify-between gap-2"><div class="flex items-center gap-2">${badge}<span class="text-xs text-gray-400">Q${idx+1}</span></div><div class="flex gap-2"><button onclick="startEdit(${idx})" class="text-xs text-blue-600 hover:underline">Edit</button><button onclick="deleteQ(${idx})" class="text-xs text-red-500 hover:underline">Delete</button></div></div>`;
+  div.className = "q-card";
+  const badge = `<span class="badge" style="background:${BADGES[q.type]};color:${BADGE_TEXT[q.type]}">${LABELS[q.type]}</span>`;
+  let body = `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;">${badge}<span style="font-size:11px;color:#999;">Q${idx+1}</span></div><div style="display:flex;gap:8px;"><button onclick="startEdit(${idx})" style="font-size:12px;color:#4f2759;cursor:pointer;text-decoration:underline;background:none;border:none;">Edit</button><button onclick="deleteQ(${idx})" style="font-size:12px;color:#b91c1c;cursor:pointer;text-decoration:underline;background:none;border:none;">Delete</button></div></div>`;
   const qtext = q.question || q.stimulus || "";
-  body += `<p class="text-sm font-medium text-gray-800">${qtext}</p>`;
-  if (q.type==="mcq") body += `<ul class="space-y-1">${q.options.map((o,i)=>`<li class="text-sm px-3 py-1.5 rounded-lg ${i===q.correct?"bg-green-50 text-green-700 font-semibold":"bg-gray-50 text-gray-600"}">${String.fromCharCode(65+i)}. ${o} ${i===q.correct?"✓":""}</li>`).join("")}</ul>`;
-  if (q.type==="mcq-multi") body += `<ul class="space-y-1">${q.options.map((o,i)=>`<li class="text-sm px-3 py-1.5 rounded-lg ${q.correct.includes(i)?"bg-green-50 text-green-700 font-semibold":"bg-gray-50 text-gray-600"}">${String.fromCharCode(65+i)}. ${o} ${q.correct.includes(i)?"✓":""}</li>`).join("")}</ul>`;
-  if (q.type==="drag-blank") body += `<p class="text-sm bg-purple-50 px-3 py-2 rounded-lg text-purple-800 font-mono">${q.sentence}</p><p class="text-xs text-gray-500">Answer: <span class="font-semibold text-green-700">${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</p>`;
-  if (q.type==="drag-order") body += `<ol class="space-y-1">${q.correctOrder.map((oi,pos)=>`<li class="text-sm bg-green-50 text-green-800 px-3 py-1.5 rounded-lg flex gap-2"><span class="font-semibold">${pos+1}.</span>${q.items[oi]}</li>`).join("")}</ol>`;
-  if (q.type==="match") body += `<div class="space-y-1">${q.pairs.map(p=>`<div class="flex gap-2 text-sm"><span class="bg-orange-50 text-orange-800 px-3 py-1.5 rounded-lg flex-1">${p.prompt}</span><span class="text-gray-400 self-center">→</span><span class="bg-green-50 text-green-800 px-3 py-1.5 rounded-lg flex-1">${p.response}</span></div>`).join("")}</div>`;
+  body += `<p style="font-size:14px;font-weight:500;color:#2d1a33;margin:0 0 8px;">${qtext}</p>`;
+  if (q.type==="mcq") body += q.options.map((o,i)=>`<div class="option-item ${i===q.correct?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o} ${i===q.correct?"✓":""}</div>`).join("");
+  if (q.type==="mcq-multi") body += q.options.map((o,i)=>`<div class="option-item ${q.correct.includes(i)?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o} ${q.correct.includes(i)?"✓":""}</div>`).join("");
+  if (q.type==="drag-blank") body += `<div class="sentence-display">${q.sentence}</div><p style="font-size:11px;color:#777;margin:4px 0 0;">Answer: <span style="font-weight:600;color:#4f2759;">${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</p>`;
+  if (q.type==="drag-order") body += q.correctOrder.map((oi,pos)=>`<div class="order-item"><span style="font-weight:600;">${pos+1}.</span>${q.items[oi]}</div>`).join("");
+  if (q.type==="match") body += q.pairs.map(p=>`<div style="display:flex;gap:8px;margin-bottom:4px;"><span class="match-prompt">${p.prompt}</span><span style="color:#cec3cf;align-self:center;">→</span><span class="match-response">${p.response}</span></div>`).join("");
   div.innerHTML = body;
   return div;
 }
@@ -288,29 +270,29 @@ function deleteQ(idx) {
 function startEdit(idx) {
   const q = questions[idx];
   const card = document.getElementById("questions-list").children[idx];
-  const badge = `<span class="text-xs font-semibold px-2 py-1 rounded-full ${BADGES[q.type]}">${LABELS[q.type]}</span>`;
-  let html = `<div class="flex items-center justify-between mb-3">${badge}<span class="text-xs text-gray-400">Q${idx+1}</span></div>`;
+  const badge = `<span class="badge" style="background:${BADGES[q.type]};color:${BADGE_TEXT[q.type]}">${LABELS[q.type]}</span>`;
+  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">${badge}<span style="font-size:11px;color:#999;">Q${idx+1}</span></div>`;
 
   if (q.type==="mcq") {
-    html += `<textarea id="e-q" class="w-full border rounded p-2 text-sm mb-3" rows="3">${q.question}</textarea>`;
-    q.options.forEach((o,i) => { html += `<div class="flex items-center gap-2 mb-2"><input type="radio" name="correct" value="${i}" ${q.correct===i?"checked":""}><input class="border rounded p-1 text-sm flex-1" id="e-opt-${i}" value="${o}"><span class="text-xs text-green-600">${q.correct===i?"✓ Correct":""}</span></div>`; });
+    html += `<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea>`;
+    q.options.forEach((o,i) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><input type="radio" name="correct" value="${i}" ${q.correct===i?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"><span style="font-size:11px;color:#c59f40;">${q.correct===i?"✓":""}</span></div>`; });
   } else if (q.type==="mcq-multi") {
-    html += `<textarea id="e-q" class="w-full border rounded p-2 text-sm mb-3" rows="3">${q.question}</textarea><p class="text-xs text-gray-500 mb-2">Tick all correct answers:</p>`;
-    q.options.forEach((o,i) => { html += `<div class="flex items-center gap-2 mb-2"><input type="checkbox" name="correct-multi" value="${i}" ${q.correct.includes(i)?"checked":""}><input class="border rounded p-1 text-sm flex-1" id="e-opt-${i}" value="${o}"></div>`; });
+    html += `<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea><p style="font-size:11px;color:#888;margin-bottom:6px;">Tick all correct answers:</p>`;
+    q.options.forEach((o,i) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><input type="checkbox" name="correct-multi" value="${i}" ${q.correct.includes(i)?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`; });
   } else if (q.type==="drag-blank") {
-    html += `<textarea id="e-q" class="w-full border rounded p-2 text-sm mb-2" rows="2">${q.question}</textarea>
-    <label class="text-xs font-semibold text-gray-600">Sentence (use ___ for blank)</label><input id="e-sentence" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.sentence}">
-    <label class="text-xs font-semibold text-gray-600">Correct Answer(s) — comma separated</label><input id="e-blanks" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.blanks.join(", ")}">
-    <label class="text-xs font-semibold text-gray-600">Distractors — comma separated</label><input id="e-distractors" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.distractors.join(", ")}">`;
+    html += `<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea>
+    <label class="edit-label">Sentence (use ___ for blank)</label><input id="e-sentence" class="edit-input" style="margin-bottom:6px;" value="${q.sentence}">
+    <label class="edit-label">Correct Answer(s) — comma separated</label><input id="e-blanks" class="edit-input" style="margin-bottom:6px;" value="${q.blanks.join(", ")}">
+    <label class="edit-label">Distractors — comma separated</label><input id="e-distractors" class="edit-input" value="${q.distractors.join(", ")}">`;
   } else if (q.type==="drag-order") {
-    html += `<textarea id="e-q" class="w-full border rounded p-2 text-sm mb-2" rows="2">${q.question}</textarea><label class="text-xs font-semibold text-gray-600">Items (in correct order)</label>`;
-    q.correctOrder.forEach((oi,pos) => { html += `<div class="flex items-center gap-2 mt-1"><span class="text-xs text-gray-400 w-5">${pos+1}.</span><input class="border rounded p-1 text-sm flex-1 e-item" data-orig="${oi}" value="${q.items[oi]}"></div>`; });
+    html += `<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea><label class="edit-label">Items (in correct order)</label>`;
+    q.correctOrder.forEach((oi,pos) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:11px;color:#888;width:16px;">${pos+1}.</span><input class="edit-input e-item" style="flex:1;" data-orig="${oi}" value="${q.items[oi]}"></div>`; });
   } else if (q.type==="match") {
-    html += `<label class="text-xs font-semibold text-gray-600">Stimulus</label><input id="e-stimulus" class="w-full border rounded p-2 text-sm mt-1 mb-2" value="${q.stimulus}"><label class="text-xs font-semibold text-gray-600">Pairs (Prompt → Response)</label>`;
-    q.pairs.forEach((p,i) => { html += `<div class="flex items-center gap-2 mt-1"><input class="border rounded p-1 text-sm flex-1 e-prompt" data-idx="${i}" value="${p.prompt}"><span class="text-gray-400">→</span><input class="border rounded p-1 text-sm flex-1 e-response" data-idx="${i}" value="${p.response}"></div>`; });
+    html += `<label class="edit-label">Stimulus</label><input id="e-stimulus" class="edit-input" style="margin-bottom:6px;" value="${q.stimulus}"><label class="edit-label">Pairs (Prompt → Response)</label>`;
+    q.pairs.forEach((p,i) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input class="edit-input e-prompt" data-idx="${i}" value="${p.prompt}" style="flex:1;"><span style="color:#cec3cf;">→</span><input class="edit-input e-response" data-idx="${i}" value="${p.response}" style="flex:1;"></div>`; });
   }
 
-  html += `<div class="flex gap-2 mt-3"><button onclick="saveEdit(${idx})" class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-blue-700">Save</button><button onclick="renderQuestions()" class="bg-gray-100 text-gray-700 text-sm px-4 py-1.5 rounded-lg hover:bg-gray-200">Cancel</button></div>`;
+  html += `<div class="edit-btn-row"><button onclick="saveEdit(${idx})" class="btn-small-purple">Save</button><button onclick="renderQuestions()" class="btn-small-light">Cancel</button></div>`;
   card.innerHTML = html;
 }
 
@@ -343,9 +325,15 @@ function saveEdit(idx) {
 function exportJSON() {
   const topic = document.getElementById("topic").value.trim();
   const payload = buildSchoolBoxJSON(questions, topic);
-  const uri = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
-  const a = document.createElement("a"); a.href=uri; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${topic.replace(/\s+/g,"_")}_quiz.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function setLoading(on) {
@@ -359,6 +347,7 @@ function showError(msg) {
   const el = document.getElementById("form-error");
   el.textContent = msg; el.classList.remove("hidden");
   setTimeout(() => el.classList.add("hidden"), 5000);
-}</script>
+}
+</script>
 </body>
 </html>
