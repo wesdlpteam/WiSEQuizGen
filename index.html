@@ -4,114 +4,82 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Wesley Quiz Builder</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --purple: #4f2759;
+    --gold: #c59f40;
+    --light-purple: #e9deeb;
+    --light-gold: #e4d1a1;
+    --grey-purple: #cec3cf;
+    --dark-text: #2d1a33;
+  }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:#F9F6E7; padding:16px; }
+  body { font-family:system-ui,sans-serif; background:var(--light-purple); padding:16px; }
   .wrap { max-width:640px; margin:0 auto; }
   .hidden { display:none!important; }
 
-  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-  .logo-mark { font-size:11px; font-weight:600; letter-spacing:2px; color:#2E361A; text-transform:uppercase; }
-  .sticker { display:inline-block; background:white; border-radius:6px; padding:4px 10px; font-size:10px; font-weight:600; color:#2E361A; letter-spacing:0.5px; border:1px solid rgba(46,54,26,0.06); }
-  .sticker.purple { background:#7C5CFF; color:white; border:none; }
-  .sticker.green { background:#A2FF5E; color:#2E361A; border:none; }
-  .sticker.yellow { background:#F3E03B; color:#2E361A; border:none; }
+  .card { background:white; border-radius:20px; border:1px solid var(--grey-purple); padding:28px; }
+  .input { width:100%; border:1px solid var(--grey-purple); border-radius:10px; padding:10px 14px; font-size:13px; outline:none; box-sizing:border-box; color:var(--dark-text); background:white; }
+  .input:focus { box-shadow:0 0 0 2px var(--purple); }
+  select.input { appearance:auto; cursor:pointer; }
 
-  .hero-type { margin-bottom:20px; }
-  .hero-type h1 { font-size:52px; font-weight:900; color:#2E361A; letter-spacing:-2.5px; line-height:0.95; margin-bottom:4px; }
-  .hero-type h1 span.hl { background:#F3E03B; padding:0 8px; border-radius:6px; display:inline-block; }
-  .hero-type p { font-size:13px; color:rgba(46,54,26,0.45); font-weight:500; letter-spacing:0.3px; }
+  .btn-primary { width:100%; background:var(--purple); color:white; font-weight:600; padding:12px; border-radius:12px; border:none; cursor:pointer; font-size:14px; }
+  .btn-primary:disabled { background:var(--grey-purple); cursor:not-allowed; }
+  .btn-primary:hover:not(:disabled) { opacity:0.9; }
+  .btn-outline { flex:1; background:transparent; border:2px solid var(--gold); color:var(--gold); font-weight:600; padding:12px; border-radius:12px; cursor:pointer; font-size:14px; }
+  .btn-gold { flex:1; background:var(--gold); color:white; font-weight:600; padding:12px; border-radius:12px; border:none; cursor:pointer; font-size:14px; }
+  .btn-gold:hover, .btn-outline:hover { opacity:0.85; }
+  .btn-small-purple { background:var(--purple); color:white; border:none; border-radius:8px; padding:6px 16px; font-size:13px; cursor:pointer; }
+  .btn-small-light { background:var(--light-purple); color:var(--purple); border:none; border-radius:8px; padding:6px 16px; font-size:13px; cursor:pointer; }
 
-  .cards-grid { display:flex; gap:10px; margin-bottom:10px; }
-  .card { border-radius:14px; padding:16px; flex:1; }
-  .card.dark { background:#2E361A; color:white; }
-  .card.yellow { background:#F3E03B; color:#2E361A; }
-  .card.green { background:#A2FF5E; color:#2E361A; }
-  .card.white { background:white; color:#2E361A; border:1px solid rgba(46,54,26,0.06); }
+  .label { font-size:13px; font-weight:600; color:var(--purple); display:block; margin-bottom:6px; }
+  .subtitle { color:#7a5f80; font-size:13px; }
 
-  .card-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; opacity:0.5; margin-bottom:8px; }
-  .card-value-big { font-size:36px; font-weight:900; letter-spacing:-1.5px; line-height:1; }
+  /* Type selector */
+  label.type-option { display:flex; align-items:flex-start; gap:12px; padding:10px 14px; border-radius:12px; border:2px solid var(--grey-purple); background:white; cursor:pointer; transition:all 0.15s; margin-bottom:8px; position:relative; }
+  label.type-option.selected { border-color:var(--purple); background:var(--light-purple); }
+  .badge { font-size:11px; font-weight:600; padding:2px 10px; border-radius:999px; display:inline-block; }
 
-  .field-input { width:100%; background:rgba(255,255,255,0.1); border:none; border-radius:8px; padding:10px 12px; font-size:14px; font-weight:600; color:white; font-family:'Inter',sans-serif; outline:none; }
-  .field-input:focus { box-shadow:0 0 0 2px #F3E03B; }
-  .field-input-light { width:100%; background:rgba(46,54,26,0.05); border:none; border-radius:8px; padding:10px 12px; font-size:14px; font-weight:600; color:#2E361A; font-family:'Inter',sans-serif; outline:none; }
-  .field-input-light:focus { box-shadow:0 0 0 2px #F3E03B; }
-  select.field-input-light { appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232E361A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
-
-  input[type=range] { width:100%; accent-color:#F3E03B; height:6px; cursor:pointer; }
-
-  .types-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-  .type-pill { border-radius:999px; padding:7px 10px 7px 16px; font-size:11px; font-weight:700; letter-spacing:0.2px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; position:relative; user-select:none; display:inline-flex; align-items:center; gap:6px; }
-  .type-pill.on { border-color:#2E361A; }
-  .type-pill.off { background:rgba(46,54,26,0.06); color:rgba(46,54,26,0.35); }
-  .info-btn { width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,0.12); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; cursor:pointer; line-height:1; flex-shrink:0; }
-
-  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:#2E361A; color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; letter-spacing:0; pointer-events:none; }
+  /* Tooltips */
+  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:var(--dark-text); color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; pointer-events:none; }
+  .tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--dark-text); }
+  label.type-option:hover > .tooltip { display:block; }
   .tooltip.show { display:block; }
-  .type-pill:hover > .tooltip { display:block; }
-  .tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:#2E361A; }
   .tooltip .tt-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.5; margin-bottom:6px; }
   .tooltip .tt-q { font-size:12px; font-weight:600; margin-bottom:6px; line-height:1.4; }
   .tooltip .tt-detail { font-size:11px; color:rgba(255,255,255,0.55); line-height:1.4; }
   .tooltip .tt-opt { font-size:11px; padding:3px 8px; border-radius:4px; margin-bottom:2px; }
-  .tooltip .tt-correct { background:rgba(243,224,59,0.15); color:#F3E03B; font-weight:600; }
-  .tooltip .tt-wrong { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
-  .cards-grid { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
-  .card { border-radius:14px; padding:16px; flex:1; min-width:0; }
+  .tooltip .tt-correct { background:rgba(255,255,255,0.12); color:white; font-weight:600; }
+  .tooltip .tt-wrong { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.4); }
+
+  /* Question cards */
+  .q-card { background:white; border:1px solid var(--grey-purple); border-radius:16px; padding:16px; margin-bottom:12px; }
+  .q-card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .q-text { font-size:14px; font-weight:500; color:var(--dark-text); margin-bottom:8px; }
+  .option-item { font-size:13px; padding:6px 12px; border-radius:8px; margin-bottom:4px; }
+  .correct-item { background:var(--light-gold); color:var(--dark-text); font-weight:600; }
+  .normal-item { background:#f9f9f9; color:#555; }
+  .sentence-display { background:var(--light-purple); color:var(--purple); padding:8px 12px; border-radius:8px; font-family:monospace; font-size:13px; }
+  .order-item { background:var(--light-gold); color:var(--dark-text); padding:6px 12px; border-radius:8px; font-size:13px; display:flex; gap:8px; margin-bottom:4px; }
+  .match-prompt { background:var(--light-purple); color:var(--purple); padding:6px 12px; border-radius:8px; flex:1; font-size:13px; }
+  .match-response { background:var(--light-gold); color:var(--dark-text); padding:6px 12px; border-radius:8px; flex:1; font-size:13px; }
+  .match-row { display:flex; gap:6px; margin-bottom:4px; align-items:center; }
+  .match-arrow { color:var(--grey-purple); font-size:11px; }
+  .q-meta { font-size:11px; color:#777; margin-top:4px; }
+  .q-meta span { font-weight:600; color:var(--purple); }
+  .q-actions button { font-size:12px; cursor:pointer; background:none; border:none; font-family:system-ui; }
+
+  .edit-input { width:100%; border:1px solid var(--grey-purple); border-radius:8px; padding:6px 10px; font-size:13px; box-sizing:border-box; color:var(--dark-text); }
+  .edit-label { font-size:11px; font-weight:600; color:var(--purple); display:block; margin:6px 0 3px; }
+  .edit-btn-row { display:flex; gap:8px; margin-top:10px; }
+  .error-msg { color:#b91c1c; font-size:13px; margin-bottom:8px; }
+
+  input[type=checkbox], input[type=radio] { accent-color:var(--purple); }
+  a { color:var(--gold); }
 
   @media (max-width:600px) {
-    .hero-type h1 { font-size:38px; letter-spacing:-1.5px; }
-    .cards-grid { flex-direction:column; }
-    .card.yellow, .card.green { max-width:100%!important; }
-    .cards-grid:first-of-type { flex-direction:row; flex-wrap:wrap; }
-    .cards-grid:first-of-type .card.dark { flex:1 1 100%; }
-    .cards-grid:first-of-type .card.yellow,
-    .cards-grid:first-of-type .card.green { flex:1 1 45%; }
-    .top-bar { flex-wrap:wrap; gap:8px; }
     .tooltip { left:0; transform:none; width:240px; }
   }
-
-  .gen-btn { width:100%; background:#2E361A; color:#F3E03B; border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; letter-spacing:-0.3px; cursor:pointer; margin-top:12px; font-family:'Inter',sans-serif; transition:opacity 0.15s; }
-  .gen-btn:hover { opacity:0.9; }
-  .gen-btn:disabled { opacity:0.4; cursor:not-allowed; }
-
-  .bottom-row { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
-  .powered { font-size:10px; color:rgba(46,54,26,0.2); font-weight:600; letter-spacing:1px; }
-
-  .q-card { background:white; border-radius:14px; padding:16px; border:1px solid rgba(46,54,26,0.06); margin-bottom:10px; }
-  .q-card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-  .q-badge { font-size:9px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.3px; display:inline-block; }
-  .q-text { font-size:13px; font-weight:600; color:#2E361A; margin-bottom:8px; }
-  .q-opt { font-size:12px; padding:5px 10px; border-radius:6px; margin-bottom:3px; font-weight:500; }
-  .q-opt.correct { background:rgba(243,224,59,0.12); color:#2E361A; font-weight:600; }
-  .q-opt.wrong { background:rgba(46,54,26,0.03); color:rgba(46,54,26,0.45); }
-  .q-actions { display:flex; gap:8px; }
-  .q-actions button { font-size:10px; font-weight:600; cursor:pointer; letter-spacing:0.3px; background:none; border:none; font-family:'Inter',sans-serif; }
-  .q-sentence { font-family:monospace; font-size:12px; background:rgba(162,255,94,0.1); padding:8px 12px; border-radius:8px; color:#2E361A; margin-bottom:6px; }
-  .q-meta { font-size:10px; color:rgba(46,54,26,0.4); }
-  .q-meta span { font-weight:700; color:#2E361A; }
-  .match-row { display:flex; gap:6px; margin-bottom:4px; align-items:center; }
-  .match-l { background:#F9F6E7; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:600; flex:1; color:#2E361A; }
-  .match-r { background:rgba(243,224,59,0.12); padding:5px 10px; border-radius:6px; font-size:11px; font-weight:600; flex:1; color:#2E361A; }
-  .match-arrow { color:rgba(46,54,26,0.2); font-size:11px; }
-  .order-item { background:rgba(162,255,94,0.1); padding:5px 10px; border-radius:6px; font-size:12px; font-weight:500; margin-bottom:3px; display:flex; gap:6px; color:#2E361A; }
-  .order-num { font-weight:700; }
-
-  .btn-row { display:flex; gap:10px; margin-top:16px; padding-bottom:24px; }
-  .btn-outline { flex:1; background:none; border:2px solid rgba(46,54,26,0.15); color:rgba(46,54,26,0.5); border-radius:12px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
-  .btn-outline:hover { border-color:rgba(46,54,26,0.3); color:#2E361A; }
-  .btn-export { flex:1; background:#2E361A; color:#F3E03B; border:none; border-radius:12px; padding:12px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; }
-
-  .edit-input { width:100%; border:1px solid rgba(46,54,26,0.1); border-radius:8px; padding:6px 10px; font-size:13px; font-family:'Inter',sans-serif; color:#2E361A; box-sizing:border-box; background:white; }
-  .edit-label { font-size:10px; font-weight:700; color:rgba(46,54,26,0.4); text-transform:uppercase; letter-spacing:0.5px; display:block; margin:8px 0 3px; }
-  .edit-btn-row { display:flex; gap:8px; margin-top:10px; }
-  .edit-btn-save { background:#2E361A; color:#F3E03B; border:none; border-radius:8px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
-  .edit-btn-cancel { background:rgba(46,54,26,0.06); color:#2E361A; border:none; border-radius:8px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
-
-  .error-msg { color:#e24b4a; font-size:12px; font-weight:600; margin-bottom:8px; }
-
-  input[type=checkbox], input[type=radio] { accent-color:#2E361A; }
 </style>
 </head>
 <body>
@@ -119,67 +87,62 @@
 
   <!-- FORM -->
   <div id="form-section">
-    <div class="top-bar">
-      <span class="logo-mark">Wesley · School Box</span>
-      <div style="display:flex;gap:6px;">
-        <span class="sticker">Quiz builder</span>
-        <span class="sticker purple">v1.0</span>
-      </div>
+    <div style="text-align:center;margin-bottom:20px;padding-top:8px;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:10px;">📚 Wesley College · School Box LMS</div>
+      <h1 style="font-size:26px;font-weight:700;color:var(--purple);margin:0 0 4px;">Quiz Builder</h1>
+      <p class="subtitle">AI-powered · Australian Curriculum aligned · School Box JSON export</p>
     </div>
-    <div class="hero-type">
-      <h1>Build<br/><span class="hl">quizzes.</span></h1>
-      <p>AI-generated · Australian Curriculum aligned · School Box export</p>
+
+    <div class="card">
+      <div style="margin-bottom:16px;">
+        <label class="label">Area of Study / Topic</label>
+        <input id="topic" type="text" placeholder="e.g. Photosynthesis, World War II, Algebra..." class="input"/>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <label class="label">Year Level</label>
+          <select id="year-level" class="input">
+            <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
+            <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
+            <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
+            <option>Year 11</option><option>Year 12</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label class="label">Number of Questions</label>
+          <select id="q-count" class="input">
+            <option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option><option>12</option><option>14</option><option>16</option>
+            <option>18</option><option>20</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="label">Question Types <span style="font-weight:400;color:#999;">— hover for examples</span></label>
+        <div id="type-checkboxes"></div>
+      </div>
+      <p id="form-error" class="error-msg hidden"></p>
+      <button onclick="generateQuiz()" id="gen-btn" class="btn-primary">✨ Generate Quiz</button>
     </div>
-    <div class="cards-grid">
-      <div class="card dark">
-        <div class="card-label">Topic</div>
-        <input id="topic" type="text" class="field-input" placeholder="e.g. Photosynthesis, WW2..."/>
-      </div>
-      <div class="card yellow" style="max-width:130px;">
-        <div class="card-label" style="opacity:0.6;">Year</div>
-        <select id="year-level" class="field-input" style="background:rgba(0,0,0,0.08);color:#2E361A;padding:6px 8px;font-size:13px;">
-          <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
-          <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
-          <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
-          <option>Year 11</option><option>Year 12</option>
-        </select>
-      </div>
-      <div class="card green" style="max-width:110px;">
-        <div class="card-label" style="opacity:0.6;">Qty</div>
-        <div id="q-count-display" class="card-value-big">6</div>
-        <input id="q-count" type="range" min="4" max="20" value="6" oninput="document.getElementById('q-count-display').textContent=this.value" style="margin-top:6px;"/>
-      </div>
-    </div>
-    <div class="cards-grid">
-      <div class="card white" style="flex:1;">
-        <div class="card-label">Question types</div>
-        <div class="types-row" id="type-pills"></div>
-      </div>
-    </div>
-    <p id="form-error" class="error-msg hidden"></p>
-    <button onclick="generateQuiz()" id="gen-btn" class="gen-btn">Generate quiz →</button>
-    <div class="bottom-row">
-      <span class="powered">POWERED BY OPENAI</span>
-      <span class="sticker green">Australian Curriculum Aligned</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:0 4px;">
+      <span style="font-size:10px;color:var(--grey-purple);font-weight:600;">Powered by OpenAI</span>
+      <span style="font-size:10px;font-weight:600;color:var(--purple);background:var(--light-gold);padding:3px 10px;border-radius:999px;">Australian Curriculum Aligned</span>
     </div>
   </div>
 
   <!-- PREVIEW -->
   <div id="preview-section" class="hidden">
-    <div class="top-bar">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span id="preview-title" style="font-size:22px;font-weight:900;color:#2E361A;letter-spacing:-1px;"></span>
-        <span id="preview-year" class="sticker yellow"></span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <h2 id="preview-title" style="margin:0;color:var(--purple);font-weight:700;"></h2>
+        <p id="preview-meta" class="subtitle" style="margin:2px 0 0;"></p>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span id="preview-count" class="sticker green"></span>
-        <button onclick="resetForm()" style="font-size:12px;color:rgba(46,54,26,0.4);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Inter',sans-serif;font-weight:600;">← back</button>
-      </div>
+      <button onclick="resetForm()" style="font-size:13px;color:var(--purple);text-decoration:underline;background:none;border:none;cursor:pointer;">← New Quiz</button>
     </div>
     <div id="questions-list"></div>
-    <div class="btn-row">
-      <button onclick="generateQuiz()" id="regen-btn" class="btn-outline">Regenerate</button>
-      <button onclick="exportJSON()" class="btn-export">Export .json →</button>
+    <div style="display:flex;gap:12px;padding:4px 0 20px;">
+      <button onclick="generateQuiz()" id="regen-btn" class="btn-outline">🔄 Regenerate</button>
+      <button onclick="exportJSON()" class="btn-gold">⬇️ Export .json</button>
     </div>
   </div>
 
@@ -190,66 +153,49 @@ const VERCEL_API = "https://wi-se-quiz-gen.vercel.app/api/generate";
 let questions = [];
 
 const TYPES = [
-  { key:"mcq", label:"MCQ", bg:"#F3E03B", color:"#2E361A",
-    example: { label:"Example", q:"What is the largest organ in the human body?", opts:["Skin ✓","Heart","Liver","Brain"], correct:0 } },
-  { key:"mcq-multi", label:"Multi", bg:"#F3E03B", color:"#2E361A",
-    example: { label:"Example", q:"Which of these are renewable energy sources?", opts:["Solar ✓","Coal","Wind ✓","Natural gas"], correct:[0,2] } },
-  { key:"drag-blank", label:"Fill blank", bg:"#A2FF5E", color:"#2E361A",
-    example: { label:"Example", q:"Complete the sentence:", sentence:"The ___ is the powerhouse of the cell.", answer:"mitochondria", distractors:"nucleus, ribosome" } },
-  { key:"drag-order", label:"Order", bg:"#FF9E42", color:"#2E361A",
-    example: { label:"Example", q:"Order the water cycle steps:", items:["1. Evaporation","2. Condensation","3. Precipitation","4. Collection"] } },
-  { key:"match", label:"Match", bg:"#7C5CFF", color:"white",
-    example: { label:"Example", q:"Match the capital to the country:", pairs:[["Australia","Canberra"],["Japan","Tokyo"],["Brazil","Brasília"]] } },
+  { key:"mcq", label:"MCQ – Single Answer", desc:"One correct answer from 4 options", badgeBg:"#4f2759", badgeText:"white", default:true,
+    tooltip:`<div class="tt-label">Example</div><div class="tt-q">What is the largest organ in the human body?</div><div class="tt-opt tt-correct">A. Skin ✓</div><div class="tt-opt tt-wrong">B. Heart</div><div class="tt-opt tt-wrong">C. Liver</div><div class="tt-opt tt-wrong">D. Brain</div>` },
+  { key:"mcq-multi", label:"MCQ – Multiple Answers", desc:"Select all correct answers", badgeBg:"#e9deeb", badgeText:"#4f2759", default:false,
+    tooltip:`<div class="tt-label">Example</div><div class="tt-q">Which are renewable energy sources?</div><div class="tt-opt tt-correct">A. Solar ✓</div><div class="tt-opt tt-wrong">B. Coal</div><div class="tt-opt tt-correct">C. Wind ✓</div><div class="tt-opt tt-wrong">D. Natural gas</div>` },
+  { key:"drag-blank", label:"Fill in the Blank", desc:"Drag words into gaps in a sentence", badgeBg:"#c59f40", badgeText:"white", default:true,
+    tooltip:`<div class="tt-label">Example</div><div class="tt-q">Complete the sentence:</div><div style="font-family:monospace;font-size:11px;background:rgba(255,255,255,0.08);padding:6px 8px;border-radius:6px;margin-bottom:4px;">The ___ is the powerhouse of the cell.</div><div class="tt-detail">Answer: mitochondria · Distractors: nucleus, ribosome</div>` },
+  { key:"drag-order", label:"Order the Steps", desc:"Drag items into the correct sequence", badgeBg:"#e4d1a1", badgeText:"#2d1a33", default:false,
+    tooltip:`<div class="tt-label">Example</div><div class="tt-q">Order the water cycle steps:</div><div class="tt-opt tt-correct">1. Evaporation</div><div class="tt-opt tt-correct">2. Condensation</div><div class="tt-opt tt-correct">3. Precipitation</div><div class="tt-opt tt-correct">4. Collection</div>` },
+  { key:"match", label:"Match List", desc:"Match items on the left to the right", badgeBg:"#cec3cf", badgeText:"#2d1a33", default:true,
+    tooltip:`<div class="tt-label">Example</div><div class="tt-q">Match the capital to the country:</div><div style="display:flex;gap:4px;margin-bottom:2px;"><span class="tt-opt tt-wrong" style="flex:1;">Australia</span><span style="color:rgba(255,255,255,0.2);font-size:10px;align-self:center;">→</span><span class="tt-opt tt-correct" style="flex:1;">Canberra</span></div><div style="display:flex;gap:4px;margin-bottom:2px;"><span class="tt-opt tt-wrong" style="flex:1;">Japan</span><span style="color:rgba(255,255,255,0.2);font-size:10px;align-self:center;">→</span><span class="tt-opt tt-correct" style="flex:1;">Tokyo</span></div>` },
 ];
 
-const defaults = ["mcq","drag-blank","match"];
-
-const pillContainer = document.getElementById("type-pills");
+const cb = document.getElementById("type-checkboxes");
 TYPES.forEach(t => {
-  const pill = document.createElement("div");
-  pill.className = `type-pill ${defaults.includes(t.key)?"on":"off"}`;
-  pill.dataset.key = t.key;
-  if (defaults.includes(t.key)) { pill.style.background = t.bg; pill.style.color = t.color; }
-  pill.onclick = () => toggleType(pill, t);
+  const lbl = document.createElement("label");
+  lbl.className = "type-option" + (t.default ? " selected" : "");
+  lbl.innerHTML = `<input type="checkbox" ${t.default?"checked":""} data-type="${t.key}" onchange="updateTypeStyle(this)" style="margin-top:2px;">
+    <div><span class="badge" style="background:${t.badgeBg};color:${t.badgeText}">${t.label}</span><p style="font-size:11px;color:#888;margin:4px 0 0;">${t.desc}</p></div>
+    <div class="tooltip">${t.tooltip}</div>`;
 
-  let tooltipHTML = `<div class="tooltip"><div class="tt-label">${t.example.label}</div><div class="tt-q">${t.example.q}</div>`;
-  if (t.key === "mcq") {
-    tooltipHTML += t.example.opts.map((o,i) => `<div class="tt-opt ${i===t.example.correct?"tt-correct":"tt-wrong"}">${o}</div>`).join("");
-  } else if (t.key === "mcq-multi") {
-    tooltipHTML += t.example.opts.map((o,i) => `<div class="tt-opt ${t.example.correct.includes(i)?"tt-correct":"tt-wrong"}">${o}</div>`).join("");
-  } else if (t.key === "drag-blank") {
-    tooltipHTML += `<div style="font-family:monospace;font-size:11px;background:rgba(162,255,94,0.15);padding:6px 8px;border-radius:6px;color:#A2FF5E;margin-bottom:4px;">${t.example.sentence}</div>`;
-    tooltipHTML += `<div class="tt-detail">Answer: ${t.example.answer} · Distractors: ${t.example.distractors}</div>`;
-  } else if (t.key === "drag-order") {
-    tooltipHTML += t.example.items.map(i => `<div class="tt-opt tt-correct">${i}</div>`).join("");
-  } else if (t.key === "match") {
-    tooltipHTML += t.example.pairs.map(p => `<div style="display:flex;gap:4px;margin-bottom:2px;"><span class="tt-opt tt-wrong" style="flex:1;">${p[0]}</span><span style="color:rgba(255,255,255,0.2);font-size:10px;align-self:center;">→</span><span class="tt-opt tt-correct" style="flex:1;">${p[1]}</span></div>`).join("");
-  }
-  tooltipHTML += `</div>`;
+  lbl.querySelector(".tooltip").addEventListener("click", e => e.stopPropagation());
 
-  pill.innerHTML = `<span class="pill-label">${t.label}</span><span class="info-btn">?</span>` + tooltipHTML;
-  pill.onclick = () => toggleType(pill, t);
-
-  pill.querySelector(".info-btn").addEventListener("click", (e) => {
-    e.stopPropagation();
-    const tt = pill.querySelector(".tooltip");
-    const isShowing = tt.classList.contains("show");
+  const infoBtn = document.createElement("span");
+  infoBtn.textContent = "?";
+  infoBtn.style.cssText = "width:18px;height:18px;border-radius:50%;background:var(--grey-purple);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;margin-left:auto;color:var(--purple);";
+  infoBtn.addEventListener("click", e => {
+    e.preventDefault(); e.stopPropagation();
+    const tt = lbl.querySelector(".tooltip");
+    const showing = tt.classList.contains("show");
     document.querySelectorAll(".tooltip.show").forEach(el => el.classList.remove("show"));
-    if (!isShowing) tt.classList.add("show");
+    if (!showing) tt.classList.add("show");
   });
-
-  pillContainer.appendChild(pill);
+  lbl.appendChild(infoBtn);
+  cb.appendChild(lbl);
 });
-
-function toggleType(pill, t) {
-  const isOn = pill.classList.contains("on");
-  if (isOn) { pill.classList.remove("on"); pill.classList.add("off"); pill.style.background = ""; pill.style.color = ""; }
-  else { pill.classList.remove("off"); pill.classList.add("on"); pill.style.background = t.bg; pill.style.color = t.color; }
-}
 
 document.addEventListener("click", () => { document.querySelectorAll(".tooltip.show").forEach(el => el.classList.remove("show")); });
 
-function getSelectedTypes() { return [...document.querySelectorAll(".type-pill.on")].map(p => p.dataset.key); }
+function updateTypeStyle(el) {
+  const lbl = el.closest("label");
+  if (el.checked) lbl.classList.add("selected"); else lbl.classList.remove("selected");
+}
+function getSelectedTypes() { return [...document.querySelectorAll("input[data-type]:checked")].map(el => el.dataset.type); }
 
 function sbUUID() { const s4=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1); return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`; }
 
@@ -270,8 +216,8 @@ async function generateQuiz() {
   const yearLevel = document.getElementById("year-level").value;
   const n = parseInt(document.getElementById("q-count").value);
   const sel = getSelectedTypes();
-  if (!topic) { showError("Enter a topic."); return; }
-  if (sel.length === 0) { showError("Select at least one question type."); return; }
+  if (!topic) { showError("Please enter a topic."); return; }
+  if (sel.length === 0) { showError("Please select at least one question type."); return; }
   setLoading(true);
   const per = Math.floor(n/sel.length), rem = n%sel.length;
   const counts = Object.fromEntries(sel.map((k,i)=>[k,per+(i<rem?1:0)]));
@@ -315,41 +261,40 @@ function showPreview(topic, yearLevel) {
   document.getElementById("form-section").classList.add("hidden");
   document.getElementById("preview-section").classList.remove("hidden");
   document.getElementById("preview-title").textContent = topic;
-  document.getElementById("preview-year").textContent = yearLevel;
-  document.getElementById("preview-count").textContent = questions.length + " questions";
+  document.getElementById("preview-meta").textContent = `${yearLevel} · ${questions.length} questions`;
   renderQuestions();
 }
 function resetForm() { document.getElementById("form-section").classList.remove("hidden"); document.getElementById("preview-section").classList.add("hidden"); questions=[]; }
 
-const BCOLORS = {mcq:["#F3E03B","#2E361A"],"mcq-multi":["#F3E03B","#2E361A"],"drag-blank":["#A2FF5E","#2E361A"],"drag-order":["#FF9E42","#2E361A"],match:["#7C5CFF","white"]};
-const BLABELS = {mcq:"MCQ","mcq-multi":"Multi","drag-blank":"Fill blank","drag-order":"Order",match:"Match"};
+const BCOLORS = {mcq:["#4f2759","white"],"mcq-multi":["#e9deeb","#4f2759"],"drag-blank":["#c59f40","white"],"drag-order":["#e4d1a1","#2d1a33"],match:["#cec3cf","#2d1a33"]};
+const BLABELS = {mcq:"MCQ – Single","mcq-multi":"MCQ – Multiple","drag-blank":"Fill in Blank","drag-order":"Order Steps",match:"Match List"};
 
 function renderQuestions() { const l=document.getElementById("questions-list"); l.innerHTML=""; questions.forEach((q,i)=>l.appendChild(createCard(q,i))); }
 
 function createCard(q,idx) {
   const d=document.createElement("div"); d.className="q-card";
-  const [bg,col] = BCOLORS[q.type];
-  let h = `<div class="q-card-top"><span class="q-badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><div class="q-actions"><button onclick="startEdit(${idx})" style="color:#7C5CFF;">Edit</button><button onclick="deleteQ(${idx})" style="color:rgba(46,54,26,0.25);">Delete</button></div></div>`;
-  h += `<div class="q-text">${q.question||q.stimulus||""}</div>`;
-  if(q.type==="mcq") h+=q.options.map((o,i)=>`<div class="q-opt ${i===q.correct?"correct":"wrong"}">${String.fromCharCode(65+i)}. ${o}${i===q.correct?" ✓":""}</div>`).join("");
-  if(q.type==="mcq-multi") h+=q.options.map((o,i)=>`<div class="q-opt ${q.correct.includes(i)?"correct":"wrong"}">${String.fromCharCode(65+i)}. ${o}${q.correct.includes(i)?" ✓":""}</div>`).join("");
-  if(q.type==="drag-blank") h+=`<div class="q-sentence">${q.sentence}</div><div class="q-meta">Answer: <span>${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</div>`;
-  if(q.type==="drag-order") h+=q.correctOrder.map((oi,p)=>`<div class="order-item"><span class="order-num">${p+1}.</span>${q.items[oi]}</div>`).join("");
-  if(q.type==="match") h+=q.pairs.map(p=>`<div class="match-row"><span class="match-l">${p.prompt}</span><span class="match-arrow">→</span><span class="match-r">${p.response}</span></div>`).join("");
+  const [bg,col]=BCOLORS[q.type];
+  let h=`<div class="q-card-top"><span class="badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><div class="q-actions"><button onclick="startEdit(${idx})" style="color:#4f2759;">Edit</button><button onclick="deleteQ(${idx})" style="color:rgba(46,54,26,0.25);">Delete</button></div></div>`;
+  h+=`<div class="q-text">${q.question||q.stimulus||""}</div>`;
+  if(q.type==="mcq") h+=q.options.map((o,i)=>`<div class="option-item ${i===q.correct?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o}${i===q.correct?" ✓":""}</div>`).join("");
+  if(q.type==="mcq-multi") h+=q.options.map((o,i)=>`<div class="option-item ${q.correct.includes(i)?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o}${q.correct.includes(i)?" ✓":""}</div>`).join("");
+  if(q.type==="drag-blank") h+=`<div class="sentence-display">${q.sentence}</div><div class="q-meta">Answer: <span>${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</div>`;
+  if(q.type==="drag-order") h+=q.correctOrder.map((oi,p)=>`<div class="order-item"><span style="font-weight:700;">${p+1}.</span>${q.items[oi]}</div>`).join("");
+  if(q.type==="match") h+=q.pairs.map(p=>`<div class="match-row"><span class="match-prompt">${p.prompt}</span><span class="match-arrow">→</span><span class="match-response">${p.response}</span></div>`).join("");
   d.innerHTML=h; return d;
 }
 
-function deleteQ(idx) { questions.splice(idx,1); renderQuestions(); document.getElementById("preview-count").textContent=questions.length+" questions"; }
+function deleteQ(idx) { questions.splice(idx,1); renderQuestions(); document.getElementById("preview-meta").textContent=`${document.getElementById("year-level").value} · ${questions.length} questions`; }
 
 function startEdit(idx) {
   const q=questions[idx], card=document.getElementById("questions-list").children[idx];
   const [bg,col]=BCOLORS[q.type];
-  let h=`<div class="q-card-top"><span class="q-badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><span style="font-size:10px;color:rgba(46,54,26,0.3);">Q${idx+1}</span></div>`;
+  let h=`<div class="q-card-top"><span class="badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><span style="font-size:11px;color:#999;">Q${idx+1}</span></div>`;
   if(q.type==="mcq"){
     h+=`<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea>`;
     q.options.forEach((o,i)=>{h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input type="radio" name="correct" value="${i}" ${q.correct===i?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`;});
   } else if(q.type==="mcq-multi"){
-    h+=`<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea><p style="font-size:10px;color:rgba(46,54,26,0.4);margin-bottom:6px;">Tick all correct:</p>`;
+    h+=`<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea><p style="font-size:11px;color:#888;margin-bottom:6px;">Tick all correct:</p>`;
     q.options.forEach((o,i)=>{h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input type="checkbox" name="correct-multi" value="${i}" ${q.correct.includes(i)?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`;});
   } else if(q.type==="drag-blank"){
     h+=`<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea>`;
@@ -358,12 +303,12 @@ function startEdit(idx) {
     h+=`<label class="edit-label">Distractors</label><input id="e-distractors" class="edit-input" value="${q.distractors.join(", ")}">`;
   } else if(q.type==="drag-order"){
     h+=`<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea><label class="edit-label">Items (correct order)</label>`;
-    q.correctOrder.forEach((oi,p)=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:10px;color:rgba(46,54,26,0.3);width:14px;">${p+1}.</span><input class="edit-input e-item" data-orig="${oi}" value="${q.items[oi]}" style="flex:1;"></div>`;});
+    q.correctOrder.forEach((oi,p)=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;color:#888;width:16px;">${p+1}.</span><input class="edit-input e-item" data-orig="${oi}" value="${q.items[oi]}" style="flex:1;"></div>`;});
   } else if(q.type==="match"){
     h+=`<label class="edit-label">Stimulus</label><input id="e-stimulus" class="edit-input" style="margin-bottom:6px;" value="${q.stimulus}"><label class="edit-label">Pairs</label>`;
-    q.pairs.forEach((p,i)=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><input class="edit-input e-prompt" data-idx="${i}" value="${p.prompt}" style="flex:1;"><span style="color:rgba(46,54,26,0.2);font-size:10px;">→</span><input class="edit-input e-response" data-idx="${i}" value="${p.response}" style="flex:1;"></div>`;});
+    q.pairs.forEach((p,i)=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><input class="edit-input e-prompt" data-idx="${i}" value="${p.prompt}" style="flex:1;"><span style="color:var(--grey-purple);font-size:11px;">→</span><input class="edit-input e-response" data-idx="${i}" value="${p.response}" style="flex:1;"></div>`;});
   }
-  h+=`<div class="edit-btn-row"><button onclick="saveEdit(${idx})" class="edit-btn-save">Save</button><button onclick="renderQuestions()" class="edit-btn-cancel">Cancel</button></div>`;
+  h+=`<div class="edit-btn-row"><button onclick="saveEdit(${idx})" class="btn-small-purple">Save</button><button onclick="renderQuestions()" class="btn-small-light">Cancel</button></div>`;
   card.innerHTML=h;
 }
 
@@ -381,15 +326,13 @@ function exportJSON() {
   const topic=document.getElementById("topic").value.trim();
   const payload=buildSchoolBoxJSON(questions,topic);
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
+  const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 function setLoading(on) {
-  document.getElementById("gen-btn").textContent=on?"Generating...":"Generate quiz →";
-  document.getElementById("gen-btn").disabled=on;
-  const r=document.getElementById("regen-btn"); if(r){r.textContent=on?"Generating...":"Regenerate";r.disabled=on;}
+  document.getElementById("gen-btn").textContent=on?"⏳ Generating...":"✨ Generate Quiz"; document.getElementById("gen-btn").disabled=on;
+  const r=document.getElementById("regen-btn"); if(r){r.textContent=on?"Generating...":"🔄 Regenerate";r.disabled=on;}
 }
 function showError(msg) { const el=document.getElementById("form-error"); el.textContent=msg; el.classList.remove("hidden"); setTimeout(()=>el.classList.add("hidden"),5000); }
 </script>
