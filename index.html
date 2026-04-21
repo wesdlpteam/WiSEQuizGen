@@ -3,102 +3,167 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>School Box Quiz Builder</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Wesley Quiz Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --purple: #4f2759;
-    --gold: #c59f40;
-    --light-purple: #e9deeb;
-    --light-gold: #e4d1a1;
-    --grey-purple: #cec3cf;
-    --dark-text: #2d1a33;
-  }
-  body { font-family: system-ui, sans-serif; background: var(--light-purple); }
-  input[type=range] { accent-color: var(--purple); width: 100%; }
-  input[type=checkbox], input[type=radio] { accent-color: var(--purple); }
-  .card { background: white; border-radius: 20px; border: 1px solid var(--grey-purple); padding: 28px; }
-  .input { width: 100%; border: 1px solid var(--grey-purple); border-radius: 10px; padding: 10px 14px; font-size: 13px; outline: none; box-sizing: border-box; }
-  .input:focus { box-shadow: 0 0 0 2px var(--purple); }
-  .btn-primary { width: 100%; background: var(--purple); color: white; font-weight: 600; padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-size: 14px; }
-  .btn-primary:disabled { background: var(--grey-purple); cursor: not-allowed; }
-  .btn-primary:hover:not(:disabled) { opacity: 0.9; }
-  .btn-outline { flex: 1; background: transparent; border: 2px solid var(--gold); color: var(--gold); font-weight: 600; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 14px; }
-  .btn-gold { flex: 1; background: var(--gold); color: white; font-weight: 600; padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-size: 14px; }
-  .btn-gold:hover, .btn-outline:hover { opacity: 0.85; }
-  .btn-small-purple { background: var(--purple); color: white; border: none; border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer; }
-  .btn-small-light { background: var(--light-purple); color: var(--purple); border: none; border-radius: 8px; padding: 6px 16px; font-size: 13px; cursor: pointer; }
-  label.type-option { display: flex; align-items: flex-start; gap: 12px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--grey-purple); background: white; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; }
-  label.type-option.selected { border-color: var(--purple); background: var(--light-purple); }
-  .q-card { background: white; border: 1px solid var(--grey-purple); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-  .badge { font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 999px; display: inline-block; }
-  .correct-item { background: var(--light-gold); color: var(--dark-text); font-weight: 600; }
-  .normal-item { background: #f9f9f9; color: #555; }
-  .option-item { font-size: 13px; padding: 6px 12px; border-radius: 8px; margin-bottom: 4px; }
-  .match-prompt { background: var(--light-purple); color: var(--purple); padding: 6px 12px; border-radius: 8px; flex: 1; font-size: 13px; }
-  .match-response { background: var(--light-gold); color: var(--dark-text); padding: 6px 12px; border-radius: 8px; flex: 1; font-size: 13px; }
-  .sentence-display { background: var(--light-purple); color: var(--purple); padding: 8px 12px; border-radius: 8px; font-family: monospace; font-size: 13px; }
-  .order-item { background: var(--light-gold); color: var(--dark-text); padding: 6px 12px; border-radius: 8px; font-size: 13px; display: flex; gap: 8px; margin-bottom: 4px; }
-  h1 { color: var(--purple); }
-  .subtitle { color: #7a5f80; font-size: 13px; }
-  .label { font-size: 13px; font-weight: 600; color: var(--purple); display: block; margin-bottom: 6px; }
-  .edit-label { font-size: 11px; font-weight: 600; color: var(--purple); display: block; margin: 6px 0 3px; }
-  .edit-input { width: 100%; border: 1px solid var(--grey-purple); border-radius: 8px; padding: 6px 10px; font-size: 13px; box-sizing: border-box; }
-  .edit-btn-row { display: flex; gap: 8px; margin-top: 10px; }
-  a { color: var(--gold); }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#F9F6E7; min-height:100vh; padding:24px 16px; }
+  .wrap { max-width:640px; margin:0 auto; }
+  .hidden { display:none!important; }
+
+  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+  .logo-mark { font-size:11px; font-weight:600; letter-spacing:2px; color:#2E361A; text-transform:uppercase; }
+  .sticker { display:inline-block; background:white; border-radius:6px; padding:4px 10px; font-size:10px; font-weight:600; color:#2E361A; letter-spacing:0.5px; border:1px solid rgba(46,54,26,0.06); }
+  .sticker.purple { background:#7C5CFF; color:white; border:none; }
+  .sticker.green { background:#A2FF5E; color:#2E361A; border:none; }
+  .sticker.yellow { background:#F3E03B; color:#2E361A; border:none; }
+
+  .hero-type { margin-bottom:28px; }
+  .hero-type h1 { font-size:52px; font-weight:900; color:#2E361A; letter-spacing:-2.5px; line-height:0.95; margin-bottom:8px; }
+  .hero-type h1 span.hl { background:#F3E03B; padding:0 8px; border-radius:6px; display:inline-block; }
+  .hero-type p { font-size:13px; color:rgba(46,54,26,0.45); font-weight:500; letter-spacing:0.3px; }
+
+  .cards-grid { display:flex; gap:10px; margin-bottom:10px; }
+  .card { border-radius:14px; padding:16px; flex:1; }
+  .card.dark { background:#2E361A; color:white; }
+  .card.yellow { background:#F3E03B; color:#2E361A; }
+  .card.green { background:#A2FF5E; color:#2E361A; }
+  .card.white { background:white; color:#2E361A; border:1px solid rgba(46,54,26,0.06); }
+
+  .card-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; opacity:0.5; margin-bottom:8px; }
+  .card-value-big { font-size:36px; font-weight:900; letter-spacing:-1.5px; line-height:1; }
+
+  .field-input { width:100%; background:rgba(255,255,255,0.1); border:none; border-radius:8px; padding:10px 12px; font-size:14px; font-weight:600; color:white; font-family:'Inter',sans-serif; outline:none; }
+  .field-input:focus { box-shadow:0 0 0 2px #F3E03B; }
+  .field-input-light { width:100%; background:rgba(46,54,26,0.05); border:none; border-radius:8px; padding:10px 12px; font-size:14px; font-weight:600; color:#2E361A; font-family:'Inter',sans-serif; outline:none; }
+  .field-input-light:focus { box-shadow:0 0 0 2px #F3E03B; }
+  select.field-input-light { appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232E361A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+
+  input[type=range] { width:100%; accent-color:#F3E03B; height:6px; cursor:pointer; }
+
+  .types-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .type-pill { border-radius:999px; padding:7px 16px; font-size:11px; font-weight:700; letter-spacing:0.2px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; position:relative; user-select:none; }
+  .type-pill.on { border-color:#2E361A; }
+  .type-pill.off { background:rgba(46,54,26,0.06); color:rgba(46,54,26,0.35); }
+
+  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:#2E361A; color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; letter-spacing:0; }
+  .tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:#2E361A; }
+  .tooltip .tt-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.5; margin-bottom:6px; }
+  .tooltip .tt-q { font-size:12px; font-weight:600; margin-bottom:6px; line-height:1.4; }
+  .tooltip .tt-detail { font-size:11px; color:rgba(255,255,255,0.55); line-height:1.4; }
+  .tooltip .tt-opt { font-size:11px; padding:3px 8px; border-radius:4px; margin-bottom:2px; }
+  .tooltip .tt-correct { background:rgba(243,224,59,0.15); color:#F3E03B; font-weight:600; }
+  .tooltip .tt-wrong { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
+  .type-pill:hover .tooltip { display:block; }
+
+  .gen-btn { width:100%; background:#2E361A; color:#F3E03B; border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; letter-spacing:-0.3px; cursor:pointer; margin-top:16px; font-family:'Inter',sans-serif; transition:opacity 0.15s; }
+  .gen-btn:hover { opacity:0.9; }
+  .gen-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+  .bottom-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+  .powered { font-size:10px; color:rgba(46,54,26,0.2); font-weight:600; letter-spacing:1px; }
+
+  .q-card { background:white; border-radius:14px; padding:16px; border:1px solid rgba(46,54,26,0.06); margin-bottom:10px; }
+  .q-card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .q-badge { font-size:9px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.3px; display:inline-block; }
+  .q-text { font-size:13px; font-weight:600; color:#2E361A; margin-bottom:8px; }
+  .q-opt { font-size:12px; padding:5px 10px; border-radius:6px; margin-bottom:3px; font-weight:500; }
+  .q-opt.correct { background:rgba(243,224,59,0.12); color:#2E361A; font-weight:600; }
+  .q-opt.wrong { background:rgba(46,54,26,0.03); color:rgba(46,54,26,0.45); }
+  .q-actions { display:flex; gap:8px; }
+  .q-actions button { font-size:10px; font-weight:600; cursor:pointer; letter-spacing:0.3px; background:none; border:none; font-family:'Inter',sans-serif; }
+  .q-sentence { font-family:monospace; font-size:12px; background:rgba(162,255,94,0.1); padding:8px 12px; border-radius:8px; color:#2E361A; margin-bottom:6px; }
+  .q-meta { font-size:10px; color:rgba(46,54,26,0.4); }
+  .q-meta span { font-weight:700; color:#2E361A; }
+  .match-row { display:flex; gap:6px; margin-bottom:4px; align-items:center; }
+  .match-l { background:#F9F6E7; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:600; flex:1; color:#2E361A; }
+  .match-r { background:rgba(243,224,59,0.12); padding:5px 10px; border-radius:6px; font-size:11px; font-weight:600; flex:1; color:#2E361A; }
+  .match-arrow { color:rgba(46,54,26,0.2); font-size:11px; }
+  .order-item { background:rgba(162,255,94,0.1); padding:5px 10px; border-radius:6px; font-size:12px; font-weight:500; margin-bottom:3px; display:flex; gap:6px; color:#2E361A; }
+  .order-num { font-weight:700; }
+
+  .btn-row { display:flex; gap:10px; margin-top:16px; padding-bottom:24px; }
+  .btn-outline { flex:1; background:none; border:2px solid rgba(46,54,26,0.15); color:rgba(46,54,26,0.5); border-radius:12px; padding:12px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+  .btn-outline:hover { border-color:rgba(46,54,26,0.3); color:#2E361A; }
+  .btn-export { flex:1; background:#2E361A; color:#F3E03B; border:none; border-radius:12px; padding:12px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; }
+
+  .edit-input { width:100%; border:1px solid rgba(46,54,26,0.1); border-radius:8px; padding:6px 10px; font-size:13px; font-family:'Inter',sans-serif; color:#2E361A; box-sizing:border-box; background:white; }
+  .edit-label { font-size:10px; font-weight:700; color:rgba(46,54,26,0.4); text-transform:uppercase; letter-spacing:0.5px; display:block; margin:8px 0 3px; }
+  .edit-btn-row { display:flex; gap:8px; margin-top:10px; }
+  .edit-btn-save { background:#2E361A; color:#F3E03B; border:none; border-radius:8px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+  .edit-btn-cancel { background:rgba(46,54,26,0.06); color:#2E361A; border:none; border-radius:8px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+
+  .error-msg { color:#e24b4a; font-size:12px; font-weight:600; margin-bottom:8px; }
+
+  input[type=checkbox], input[type=radio] { accent-color:#2E361A; }
 </style>
 </head>
 <body>
-<div class="max-w-2xl mx-auto" style="padding:24px 16px;">
-
-  <!-- HEADER -->
-  <div style="text-align:center;margin-bottom:28px;padding-top:16px;">
-    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:12px;">📚 Wesley College · School Box LMS</div>
-    <h1 style="font-size:26px;font-weight:700;margin:0 0 4px;">Quiz Builder</h1>
-    <p class="subtitle">AI-powered · MCQ, Drag & Drop, Match · School Box JSON export</p>
-  </div>
+<div class="wrap">
 
   <!-- FORM -->
-  <div id="form-section" class="card" style="margin-bottom:16px;">
-    <div style="margin-bottom:18px;">
-      <label class="label">Area of Study / Topic</label>
-      <input id="topic" type="text" placeholder="e.g. Photosynthesis, World War II, Algebra..." class="input"/>
+  <div id="form-section">
+    <div class="top-bar">
+      <span class="logo-mark">Wesley · School Box</span>
+      <div style="display:flex;gap:6px;">
+        <span class="sticker">Quiz builder</span>
+        <span class="sticker purple">v1.0</span>
+      </div>
     </div>
-    <div style="margin-bottom:18px;">
-      <label class="label">Year Level</label>
-      <select id="year-level" class="input" style="background:white;">
-        <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
-        <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
-        <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
-        <option>Year 11</option><option>Year 12</option>
-      </select>
+    <div class="hero-type">
+      <h1>Build<br/><span class="hl">quizzes.</span></h1>
+      <p>AI-generated · Australian Curriculum aligned · School Box export</p>
     </div>
-    <div style="margin-bottom:18px;">
-      <label class="label">Number of Questions: <span id="q-count-label" style="color:var(--gold)">6</span></label>
-      <input id="q-count" type="range" min="4" max="20" value="6" oninput="document.getElementById('q-count-label').textContent=this.value"/>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:#999;margin-top:2px;"><span>4</span><span>20</span></div>
+    <div class="cards-grid">
+      <div class="card dark">
+        <div class="card-label">Topic</div>
+        <input id="topic" type="text" class="field-input" placeholder="e.g. Photosynthesis, WW2..."/>
+      </div>
+      <div class="card yellow" style="max-width:130px;">
+        <div class="card-label" style="opacity:0.6;">Year</div>
+        <select id="year-level" class="field-input" style="background:rgba(0,0,0,0.08);color:#2E361A;padding:6px 8px;font-size:13px;">
+          <option>Prep</option><option>Year 1</option><option>Year 2</option><option>Year 3</option>
+          <option>Year 4</option><option>Year 5</option><option>Year 6</option><option>Year 7</option>
+          <option selected>Year 8</option><option>Year 9</option><option>Year 10</option>
+          <option>Year 11</option><option>Year 12</option>
+        </select>
+      </div>
+      <div class="card green" style="max-width:110px;">
+        <div class="card-label" style="opacity:0.6;">Qty</div>
+        <div id="q-count-display" class="card-value-big">6</div>
+        <input id="q-count" type="range" min="4" max="20" value="6" oninput="document.getElementById('q-count-display').textContent=this.value" style="margin-top:6px;"/>
+      </div>
     </div>
-    <div style="margin-bottom:20px;">
-      <label class="label">Question Types <span style="font-weight:400;color:#999;">— select all you want included</span></label>
-      <div id="type-checkboxes"></div>
+    <div class="cards-grid">
+      <div class="card white" style="flex:1;">
+        <div class="card-label">Question types</div>
+        <div class="types-row" id="type-pills"></div>
+      </div>
     </div>
-    <p id="form-error" class="hidden" style="color:#b91c1c;font-size:13px;margin-bottom:8px;"></p>
-    <button onclick="generateQuiz()" id="gen-btn" class="btn-primary">✨ Generate Quiz</button>
+    <p id="form-error" class="error-msg hidden"></p>
+    <button onclick="generateQuiz()" id="gen-btn" class="gen-btn">Generate quiz →</button>
+    <div class="bottom-row">
+      <span class="powered">POWERED BY OPENAI</span>
+      <span class="sticker green">Australian Curriculum</span>
+    </div>
   </div>
 
   <!-- PREVIEW -->
   <div id="preview-section" class="hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div>
-        <h2 id="preview-title" style="margin:0;color:var(--purple);font-weight:700;"></h2>
-        <p id="preview-meta" class="subtitle" style="margin:2px 0 0;"></p>
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="preview-title" style="font-size:22px;font-weight:900;color:#2E361A;letter-spacing:-1px;"></span>
+        <span id="preview-year" class="sticker yellow"></span>
       </div>
-      <button onclick="resetForm()" style="font-size:13px;color:var(--purple);text-decoration:underline;background:none;border:none;cursor:pointer;">← New Quiz</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="preview-count" class="sticker green"></span>
+        <button onclick="resetForm()" style="font-size:12px;color:rgba(46,54,26,0.4);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:'Inter',sans-serif;font-weight:600;">← back</button>
+      </div>
     </div>
     <div id="questions-list"></div>
-    <div style="display:flex;gap:12px;padding:8px 0 24px;">
-      <button onclick="generateQuiz()" id="regen-btn" class="btn-outline">🔄 Regenerate</button>
-      <button onclick="exportJSON()" class="btn-gold">⬇️ Export .json</button>
+    <div class="btn-row">
+      <button onclick="generateQuiz()" id="regen-btn" class="btn-outline">Regenerate</button>
+      <button onclick="exportJSON()" class="btn-export">Export .json →</button>
     </div>
   </div>
 
@@ -106,118 +171,115 @@
 
 <script>
 const VERCEL_API = "https://wi-se-quiz-gen.vercel.app/api/generate";
-
 let questions = [];
 
-const QUESTION_TYPES = [
-  { key:"mcq",        label:"MCQ – Single Answer",    desc:"One correct answer from 4 options",     badgeBg:"#4f2759", badgeText:"white",   default:true  },
-  { key:"mcq-multi",  label:"MCQ – Multiple Answers", desc:"Select all correct answers",             badgeBg:"#e9deeb", badgeText:"#4f2759", default:false },
-  { key:"drag-blank", label:"Fill in the Blank",      desc:"Drag words into gaps in a sentence",    badgeBg:"#c59f40", badgeText:"white",   default:true  },
-  { key:"drag-order", label:"Order the Steps",        desc:"Drag items into the correct sequence",  badgeBg:"#e4d1a1", badgeText:"#2d1a33", default:false },
-  { key:"match",      label:"Match List",             desc:"Match items on the left to the right",  badgeBg:"#cec3cf", badgeText:"#2d1a33", default:true  },
+const TYPES = [
+  { key:"mcq", label:"MCQ", bg:"#F3E03B", color:"#2E361A",
+    example: { label:"Example", q:"What is the largest organ in the human body?", opts:["Skin ✓","Heart","Liver","Brain"], correct:0 } },
+  { key:"mcq-multi", label:"Multi", bg:"#F3E03B", color:"#2E361A",
+    example: { label:"Example", q:"Which of these are renewable energy sources?", opts:["Solar ✓","Coal","Wind ✓","Natural gas"], correct:[0,2] } },
+  { key:"drag-blank", label:"Fill blank", bg:"#A2FF5E", color:"#2E361A",
+    example: { label:"Example", q:"Complete the sentence:", sentence:"The ___ is the powerhouse of the cell.", answer:"mitochondria", distractors:"nucleus, ribosome" } },
+  { key:"drag-order", label:"Order", bg:"#FF9E42", color:"#2E361A",
+    example: { label:"Example", q:"Order the water cycle steps:", items:["1. Evaporation","2. Condensation","3. Precipitation","4. Collection"] } },
+  { key:"match", label:"Match", bg:"#7C5CFF", color:"white",
+    example: { label:"Example", q:"Match the capital to the country:", pairs:[["Australia","Canberra"],["Japan","Tokyo"],["Brazil","Brasília"]] } },
 ];
 
-const cb = document.getElementById("type-checkboxes");
-QUESTION_TYPES.forEach(t => {
-  const div = document.createElement("label");
-  div.className = "type-option" + (t.default ? " selected" : "");
-  div.dataset.key = t.key;
-  div.innerHTML = `<input type="checkbox" ${t.default?"checked":""} data-type="${t.key}" onchange="updateTypeStyle(this)" style="margin-top:2px;">
-    <div><span class="badge" style="background:${t.badgeBg};color:${t.badgeText}">${t.label}</span><p style="font-size:11px;color:#888;margin:4px 0 0;">${t.desc}</p></div>`;
-  cb.appendChild(div);
+const defaults = ["mcq","drag-blank","match"];
+
+const pillContainer = document.getElementById("type-pills");
+TYPES.forEach(t => {
+  const pill = document.createElement("div");
+  pill.className = `type-pill ${defaults.includes(t.key)?"on":"off"}`;
+  pill.dataset.key = t.key;
+  if (defaults.includes(t.key)) { pill.style.background = t.bg; pill.style.color = t.color; }
+  pill.onclick = () => toggleType(pill, t);
+
+  let tooltipHTML = `<div class="tooltip"><div class="tt-label">${t.example.label}</div><div class="tt-q">${t.example.q}</div>`;
+  if (t.key === "mcq") {
+    tooltipHTML += t.example.opts.map((o,i) => `<div class="tt-opt ${i===t.example.correct?"tt-correct":"tt-wrong"}">${o}</div>`).join("");
+  } else if (t.key === "mcq-multi") {
+    tooltipHTML += t.example.opts.map((o,i) => `<div class="tt-opt ${t.example.correct.includes(i)?"tt-correct":"tt-wrong"}">${o}</div>`).join("");
+  } else if (t.key === "drag-blank") {
+    tooltipHTML += `<div style="font-family:monospace;font-size:11px;background:rgba(162,255,94,0.15);padding:6px 8px;border-radius:6px;color:#A2FF5E;margin-bottom:4px;">${t.example.sentence}</div>`;
+    tooltipHTML += `<div class="tt-detail">Answer: ${t.example.answer} · Distractors: ${t.example.distractors}</div>`;
+  } else if (t.key === "drag-order") {
+    tooltipHTML += t.example.items.map(i => `<div class="tt-opt tt-correct">${i}</div>`).join("");
+  } else if (t.key === "match") {
+    tooltipHTML += t.example.pairs.map(p => `<div style="display:flex;gap:4px;margin-bottom:2px;"><span class="tt-opt tt-wrong" style="flex:1;">${p[0]}</span><span style="color:rgba(255,255,255,0.2);font-size:10px;align-self:center;">→</span><span class="tt-opt tt-correct" style="flex:1;">${p[1]}</span></div>`).join("");
+  }
+  tooltipHTML += `</div>`;
+
+  pill.innerHTML = t.label + tooltipHTML;
+  pillContainer.appendChild(pill);
 });
 
-function updateTypeStyle(el) {
-  const label = el.closest("label");
-  if (el.checked) { label.classList.add("selected"); }
-  else { label.classList.remove("selected"); }
+function toggleType(pill, t) {
+  const isOn = pill.classList.contains("on");
+  if (isOn) { pill.classList.remove("on"); pill.classList.add("off"); pill.style.background = ""; pill.style.color = ""; }
+  else { pill.classList.remove("off"); pill.classList.add("on"); pill.style.background = t.bg; pill.style.color = t.color; }
 }
 
-function getSelectedTypes() {
-  return [...document.querySelectorAll("input[data-type]:checked")].map(el => el.dataset.type);
-}
+function getSelectedTypes() { return [...document.querySelectorAll(".type-pill.on")].map(p => p.dataset.key); }
 
-function sbUUID() {
-  const s4 = () => Math.floor((1+Math.random())*0x10000).toString(16).slice(1);
-  return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
-}
+function sbUUID() { const s4=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1); return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`; }
 
 function buildSchoolBoxJSON(qs, topic) {
-  const actRef = sbUUID(), itemRef = sbUUID();
-  const qMap = {}, widgetRefs = [], qMeta = [];
-  qs.forEach(q => {
-    const ref = sbUUID();
-    widgetRefs.push({ reference:ref, widget_type:"question" });
-    if (q.type === "mcq") {
-      qMeta.push({ reference:ref, type:"mcq" });
-      qMap[ref] = { type:"mcq", widget_type:"response", reference:ref, data:{ options:q.options.map((l,i)=>({ label:`<h4>${l}</h4>\n`, value:String(i) })), stimulus:`<h3>${q.question}</h3>\n`, type:"mcq", validation:{ scoring_type:"exactMatch", valid_response:{ score:1, value:[String(q.correct)] } }, ui_style:{ choice_label:"upper-alpha", type:"block" } }, metadata:{ name:"Multiple choice – block layout", template_reference:"33d53a22-1a59-4a03-9671-7f5104edd62e" } };
-    } else if (q.type === "mcq-multi") {
-      qMeta.push({ reference:ref, type:"mcq" });
-      qMap[ref] = { type:"mcq", widget_type:"response", reference:ref, data:{ multiple_responses:true, options:q.options.map((l,i)=>({ label:l, value:String(i) })), stimulus:q.question, type:"mcq", validation:{ scoring_type:"exactMatch", valid_response:{ score:1, value:q.correct.map(String) } }, ui_style:{ type:"horizontal" } }, metadata:{ name:"Multiple choice – multiple response", template_reference:"908de244-5c71-4c09-b094-7fb49554f2f9" } };
-    } else if (q.type === "drag-blank") {
-      qMeta.push({ reference:ref, type:"clozeassociation" });
-      const all = [...q.blanks, ...q.distractors].sort(()=>Math.random()-0.5);
-      qMap[ref] = { type:"clozeassociation", widget_type:"response", reference:ref, data:{ possible_responses:all.map(r=>`<h4>${r}</h4>\n`), response_container:{ pointer:"left" }, stimulus:`<h4>Complete the sentence</h4>\n`, template:`<h4>${q.sentence.replace(/___/g,"{{response}}")}</h4>\n`, type:"clozeassociation", validation:{ scoring_type:"exactMatch", valid_response:{ score:1, value:q.blanks.map(()=>null) } } }, metadata:{ name:"Cloze with drag & drop", template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb" } };
-    } else if (q.type === "drag-order") {
-      qMeta.push({ reference:ref, type:"clozeassociation" });
-      const ordered = q.correctOrder.map(i => q.items[i]);
-      qMap[ref] = { type:"clozeassociation", widget_type:"response", reference:ref, data:{ possible_responses:[...q.items].sort(()=>Math.random()-0.5).map(r=>`<h4>${r}</h4>\n`), response_container:{ pointer:"left" }, stimulus:`<h4>${q.question}</h4>\n`, template:`<h4>${ordered.map(()=>"{{response}}").join("<br/>")}</h4>\n`, type:"clozeassociation", validation:{ scoring_type:"exactMatch", valid_response:{ score:1, value:ordered.map(()=>null) } } }, metadata:{ name:"Order with drag & drop", template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb" } };
-    } else if (q.type === "match") {
-      qMeta.push({ reference:ref, type:"association" });
-      qMap[ref] = { type:"association", widget_type:"response", reference:ref, data:{ possible_responses:q.pairs.map(p=>p.response), stimulus:q.stimulus, stimulus_list:q.pairs.map(p=>p.prompt), type:"association", validation:{ scoring_type:"exactMatch", valid_response:{ score:1, value:q.pairs.map(p=>p.response) } } }, metadata:{ name:"Match list", template_reference:"1fa22aac-1f88-47f7-941b-3c77759549e6" } };
-    }
+  const actRef=sbUUID(), itemRef=sbUUID(); const qMap={}, wr=[], qm=[];
+  qs.forEach(q => { const ref=sbUUID(); wr.push({reference:ref,widget_type:"question"});
+    if(q.type==="mcq"){qm.push({reference:ref,type:"mcq"});qMap[ref]={type:"mcq",widget_type:"response",reference:ref,data:{options:q.options.map((l,i)=>({label:`<h4>${l}</h4>\n`,value:String(i)})),stimulus:`<h3>${q.question}</h3>\n`,type:"mcq",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:[String(q.correct)]}},ui_style:{choice_label:"upper-alpha",type:"block"}},metadata:{name:"Multiple choice – block layout",template_reference:"33d53a22-1a59-4a03-9671-7f5104edd62e"}};}
+    else if(q.type==="mcq-multi"){qm.push({reference:ref,type:"mcq"});qMap[ref]={type:"mcq",widget_type:"response",reference:ref,data:{multiple_responses:true,options:q.options.map((l,i)=>({label:l,value:String(i)})),stimulus:q.question,type:"mcq",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:q.correct.map(String)}},ui_style:{type:"horizontal"}},metadata:{name:"Multiple choice – multiple response",template_reference:"908de244-5c71-4c09-b094-7fb49554f2f9"}};}
+    else if(q.type==="drag-blank"){qm.push({reference:ref,type:"clozeassociation"});const all=[...q.blanks,...q.distractors].sort(()=>Math.random()-0.5);qMap[ref]={type:"clozeassociation",widget_type:"response",reference:ref,data:{possible_responses:all.map(r=>`<h4>${r}</h4>\n`),response_container:{pointer:"left"},stimulus:`<h4>Complete the sentence</h4>\n`,template:`<h4>${q.sentence.replace(/___/g,"{{response}}")}</h4>\n`,type:"clozeassociation",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:q.blanks.map(()=>null)}}},metadata:{name:"Cloze with drag & drop",template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb"}};}
+    else if(q.type==="drag-order"){qm.push({reference:ref,type:"clozeassociation"});const ord=q.correctOrder.map(i=>q.items[i]);qMap[ref]={type:"clozeassociation",widget_type:"response",reference:ref,data:{possible_responses:[...q.items].sort(()=>Math.random()-0.5).map(r=>`<h4>${r}</h4>\n`),response_container:{pointer:"left"},stimulus:`<h4>${q.question}</h4>\n`,template:`<h4>${ord.map(()=>"{{response}}").join("<br/>")}</h4>\n`,type:"clozeassociation",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:ord.map(()=>null)}}},metadata:{name:"Order with drag & drop",template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb"}};}
+    else if(q.type==="match"){qm.push({reference:ref,type:"association"});qMap[ref]={type:"association",widget_type:"response",reference:ref,data:{possible_responses:q.pairs.map(p=>p.response),stimulus:q.stimulus,stimulus_list:q.pairs.map(p=>p.prompt),type:"association",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:q.pairs.map(p=>p.response)}}},metadata:{name:"Match list",template_reference:"1fa22aac-1f88-47f7-941b-3c77759549e6"}};}
   });
-  return { settings:{ title:`${topic} Quiz`, description:"<p>Complete this quiz to demonstrate your understanding.</p>", workType:"Learning Task", dates:{ publishAt:null, openAt:null, dueAt:null, closeAt:null }, weight:0, shuffleItems:0, promptsMode:0, maxAttempts:0, duration:0, readingTimeDuration:0, completionMessage:"", defaultOpenSpan:null, curriculumNodes:[], markType:"raw", gradeGroup:"Standard", markScheme:"TotalMarkFractional", markVisibility:2, creator:null, context:null, sequence:null }, assets:[], content:{ activities:{ [actRef]:{ reference:actRef, title:null, description:"", data:{ rendering_type:"assess", config:{ configuration:{ idle_timeout:{ interval:300 } }, navigation:{ show_intro:false, show_outro:false }, regions:{ "top-left":[{ type:"title_element" }], "top-right":[{ type:"itemcount_element" },{ type:"reading_timer_element" },{ type:"timer_element" }], items:[{ type:"progress_element" },{ type:"slider_element" }], right:[{ type:"save_button" },{ type:"reviewscreen_button" },{ type:"resource_button" },{ type:"flagitem_button" },{ type:"masking_button" },{ type:"verticaltoc_element" }], "bottom-left":[{ type:"previous_button", show_label_option:true }], "bottom-right":[{ type:"next_button" }] } }, items:[{ reference:itemRef, id:itemRef }] }, status:"published", adaptive:{ difficulty:null, operational_exposure:null, seeding_exposure:null } } }, items:{ [itemRef]:{ reference:itemRef, title:topic, workflow:null, metadata:null, note:"", source:"", definition:{ widgets:widgetRefs, template:"dynamic" }, description:"", status:"published", questions:qMeta, features:[] } }, questions:qMap, features:[] } };
+  return {settings:{title:`${topic} Quiz`,description:"<p>Complete this quiz to demonstrate your understanding.</p>",workType:"Learning Task",dates:{publishAt:null,openAt:null,dueAt:null,closeAt:null},weight:0,shuffleItems:0,promptsMode:0,maxAttempts:0,duration:0,readingTimeDuration:0,completionMessage:"",defaultOpenSpan:null,curriculumNodes:[],markType:"raw",gradeGroup:"Standard",markScheme:"TotalMarkFractional",markVisibility:2,creator:null,context:null,sequence:null},assets:[],content:{activities:{[actRef]:{reference:actRef,title:null,description:"",data:{rendering_type:"assess",config:{configuration:{idle_timeout:{interval:300}},navigation:{show_intro:false,show_outro:false},regions:{"top-left":[{type:"title_element"}],"top-right":[{type:"itemcount_element"},{type:"reading_timer_element"},{type:"timer_element"}],items:[{type:"progress_element"},{type:"slider_element"}],right:[{type:"save_button"},{type:"reviewscreen_button"},{type:"resource_button"},{type:"flagitem_button"},{type:"masking_button"},{type:"verticaltoc_element"}],"bottom-left":[{type:"previous_button",show_label_option:true}],"bottom-right":[{type:"next_button"}]}},items:[{reference:itemRef,id:itemRef}]},status:"published",adaptive:{difficulty:null,operational_exposure:null,seeding_exposure:null}}},items:{[itemRef]:{reference:itemRef,title:topic,workflow:null,metadata:null,note:"",source:"",definition:{widgets:wr,template:"dynamic"},description:"",status:"published",questions:qm,features:[]}},questions:qMap,features:[]}};
 }
 
 async function generateQuiz() {
   const topic = document.getElementById("topic").value.trim();
   const yearLevel = document.getElementById("year-level").value;
   const n = parseInt(document.getElementById("q-count").value);
-  const selectedTypes = getSelectedTypes();
-  if (!topic) { showError("Please enter a topic."); return; }
-  if (selectedTypes.length === 0) { showError("Please select at least one question type."); return; }
+  const sel = getSelectedTypes();
+  if (!topic) { showError("Enter a topic."); return; }
+  if (sel.length === 0) { showError("Select at least one question type."); return; }
   setLoading(true);
-
-  const perType = Math.floor(n / selectedTypes.length);
-  const rem = n % selectedTypes.length;
-  const counts = Object.fromEntries(selectedTypes.map((k,i) => [k, perType + (i < rem ? 1 : 0)]));
-  const typeLabels = { "mcq":"MCQ – Single Answer", "mcq-multi":"MCQ – Multiple Answers", "drag-blank":"Fill in the Blank", "drag-order":"Order the Steps", "match":"Match List" };
-  const breakdown = selectedTypes.map(k => `- ${counts[k]} × ${typeLabels[k]}`).join("\n");
-
-  const typeInstructions = {
-    "mcq":        `{"type":"mcq","question":"...","options":["A","B","C","D"],"correct":0}`,
-    "mcq-multi":  `{"type":"mcq-multi","question":"...","options":["A","B","C","D"],"correct":[0,2]}`,
-    "drag-blank": `{"type":"drag-blank","question":"Complete the sentence.","sentence":"The ___ is the powerhouse of the cell.","blanks":["mitochondria"],"distractors":["nucleus","ribosome","vacuole"]}`,
-    "drag-order": `{"type":"drag-order","question":"Order the steps correctly.","items":["Step A","Step B","Step C","Step D"],"correctOrder":[0,1,2,3]}`,
-    "match":      `{"type":"match","stimulus":"Match each item to its description.","pairs":[{"prompt":"Cause A","response":"Effect A"},{"prompt":"Cause B","response":"Effect B"},{"prompt":"Cause C","response":"Effect C"}]}`
+  const per = Math.floor(n/sel.length), rem = n%sel.length;
+  const counts = Object.fromEntries(sel.map((k,i)=>[k,per+(i<rem?1:0)]));
+  const labels = {"mcq":"MCQ – Single Answer","mcq-multi":"MCQ – Multiple Answers","drag-blank":"Fill in the Blank","drag-order":"Order the Steps","match":"Match List"};
+  const breakdown = sel.map(k=>`- ${counts[k]} × ${labels[k]}`).join("\n");
+  const ti = {
+    "mcq":`{"type":"mcq","question":"...","options":["A","B","C","D"],"correct":0}`,
+    "mcq-multi":`{"type":"mcq-multi","question":"...","options":["A","B","C","D"],"correct":[0,2]}`,
+    "drag-blank":`{"type":"drag-blank","question":"Complete the sentence.","sentence":"The ___ is the powerhouse of the cell.","blanks":["mitochondria"],"distractors":["nucleus","ribosome","vacuole"]}`,
+    "drag-order":`{"type":"drag-order","question":"Order the steps correctly.","items":["Step A","Step B","Step C","Step D"],"correctOrder":[0,1,2,3]}`,
+    "match":`{"type":"match","stimulus":"Match each item.","pairs":[{"prompt":"A","response":"1"},{"prompt":"B","response":"2"},{"prompt":"C","response":"3"}]}`
   };
-  const formats = selectedTypes.map(k => typeInstructions[k]).join("\n\n");
+  const prompt = `You are an educational quiz creator for Australian schools. All questions MUST align with the Australian Curriculum (ACARA v9.0) content descriptions for ${yearLevel}.
 
-  const prompt = `You are an educational quiz creator for Australian schools.
 Create a quiz for ${yearLevel} students on: "${topic}".
-Generate exactly ${n} questions with this breakdown:
+Generate exactly ${n} questions:
 ${breakdown}
+
+IMPORTANT:
+- All content must be appropriate for ${yearLevel} students as defined by the Australian Curriculum.
+- Questions should reflect the knowledge, understanding and skills outlined in the relevant ACARA content descriptions.
+- Use Australian English spelling (e.g. colour, analyse, organisation).
 
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
 
-Use these exact formats:
-${formats}
+${sel.map(k=>ti[k]).join("\n\n")}
 
 Return ONLY the JSON array.`;
 
   try {
-    const res = await fetch(VERCEL_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
-    });
+    const res = await fetch(VERCEL_API, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({prompt}) });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    const raw = data.result;
-    questions = JSON.parse(raw.replace(/```json|```/g,"").trim());
+    questions = JSON.parse(data.result.replace(/```json|```/g,"").trim());
     showPreview(topic, yearLevel);
-  } catch(e) { showError("Failed to generate questions: " + e.message); }
+  } catch(e) { showError("Failed: " + e.message); }
   setLoading(false);
 }
 
@@ -225,129 +287,83 @@ function showPreview(topic, yearLevel) {
   document.getElementById("form-section").classList.add("hidden");
   document.getElementById("preview-section").classList.remove("hidden");
   document.getElementById("preview-title").textContent = topic;
-  document.getElementById("preview-meta").textContent = `${yearLevel} · ${questions.length} questions`;
+  document.getElementById("preview-year").textContent = yearLevel;
+  document.getElementById("preview-count").textContent = questions.length + " questions";
   renderQuestions();
 }
+function resetForm() { document.getElementById("form-section").classList.remove("hidden"); document.getElementById("preview-section").classList.add("hidden"); questions=[]; }
 
-function resetForm() {
-  document.getElementById("form-section").classList.remove("hidden");
-  document.getElementById("preview-section").classList.add("hidden");
-  questions = [];
+const BCOLORS = {mcq:["#F3E03B","#2E361A"],"mcq-multi":["#F3E03B","#2E361A"],"drag-blank":["#A2FF5E","#2E361A"],"drag-order":["#FF9E42","#2E361A"],match:["#7C5CFF","white"]};
+const BLABELS = {mcq:"MCQ","mcq-multi":"Multi","drag-blank":"Fill blank","drag-order":"Order",match:"Match"};
+
+function renderQuestions() { const l=document.getElementById("questions-list"); l.innerHTML=""; questions.forEach((q,i)=>l.appendChild(createCard(q,i))); }
+
+function createCard(q,idx) {
+  const d=document.createElement("div"); d.className="q-card";
+  const [bg,col] = BCOLORS[q.type];
+  let h = `<div class="q-card-top"><span class="q-badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><div class="q-actions"><button onclick="startEdit(${idx})" style="color:#7C5CFF;">Edit</button><button onclick="deleteQ(${idx})" style="color:rgba(46,54,26,0.25);">Delete</button></div></div>`;
+  h += `<div class="q-text">${q.question||q.stimulus||""}</div>`;
+  if(q.type==="mcq") h+=q.options.map((o,i)=>`<div class="q-opt ${i===q.correct?"correct":"wrong"}">${String.fromCharCode(65+i)}. ${o}${i===q.correct?" ✓":""}</div>`).join("");
+  if(q.type==="mcq-multi") h+=q.options.map((o,i)=>`<div class="q-opt ${q.correct.includes(i)?"correct":"wrong"}">${String.fromCharCode(65+i)}. ${o}${q.correct.includes(i)?" ✓":""}</div>`).join("");
+  if(q.type==="drag-blank") h+=`<div class="q-sentence">${q.sentence}</div><div class="q-meta">Answer: <span>${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</div>`;
+  if(q.type==="drag-order") h+=q.correctOrder.map((oi,p)=>`<div class="order-item"><span class="order-num">${p+1}.</span>${q.items[oi]}</div>`).join("");
+  if(q.type==="match") h+=q.pairs.map(p=>`<div class="match-row"><span class="match-l">${p.prompt}</span><span class="match-arrow">→</span><span class="match-r">${p.response}</span></div>`).join("");
+  d.innerHTML=h; return d;
 }
 
-const BADGES = { mcq:"#4f2759", "mcq-multi":"#e9deeb", "drag-blank":"#c59f40", "drag-order":"#e4d1a1", match:"#cec3cf" };
-const BADGE_TEXT = { mcq:"white", "mcq-multi":"#4f2759", "drag-blank":"white", "drag-order":"#2d1a33", match:"#2d1a33" };
-const LABELS = { mcq:"MCQ – Single", "mcq-multi":"MCQ – Multiple", "drag-blank":"Fill in Blank", "drag-order":"Order Steps", match:"Match List" };
-
-function renderQuestions() {
-  const list = document.getElementById("questions-list");
-  list.innerHTML = "";
-  questions.forEach((q, i) => list.appendChild(createCard(q, i)));
-}
-
-function createCard(q, idx) {
-  const div = document.createElement("div");
-  div.className = "q-card";
-  const badge = `<span class="badge" style="background:${BADGES[q.type]};color:${BADGE_TEXT[q.type]}">${LABELS[q.type]}</span>`;
-  let body = `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;"><div style="display:flex;align-items:center;gap:8px;">${badge}<span style="font-size:11px;color:#999;">Q${idx+1}</span></div><div style="display:flex;gap:8px;"><button onclick="startEdit(${idx})" style="font-size:12px;color:#4f2759;cursor:pointer;text-decoration:underline;background:none;border:none;">Edit</button><button onclick="deleteQ(${idx})" style="font-size:12px;color:#b91c1c;cursor:pointer;text-decoration:underline;background:none;border:none;">Delete</button></div></div>`;
-  const qtext = q.question || q.stimulus || "";
-  body += `<p style="font-size:14px;font-weight:500;color:#2d1a33;margin:0 0 8px;">${qtext}</p>`;
-  if (q.type==="mcq") body += q.options.map((o,i)=>`<div class="option-item ${i===q.correct?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o} ${i===q.correct?"✓":""}</div>`).join("");
-  if (q.type==="mcq-multi") body += q.options.map((o,i)=>`<div class="option-item ${q.correct.includes(i)?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o} ${q.correct.includes(i)?"✓":""}</div>`).join("");
-  if (q.type==="drag-blank") body += `<div class="sentence-display">${q.sentence}</div><p style="font-size:11px;color:#777;margin:4px 0 0;">Answer: <span style="font-weight:600;color:#4f2759;">${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</p>`;
-  if (q.type==="drag-order") body += q.correctOrder.map((oi,pos)=>`<div class="order-item"><span style="font-weight:600;">${pos+1}.</span>${q.items[oi]}</div>`).join("");
-  if (q.type==="match") body += q.pairs.map(p=>`<div style="display:flex;gap:8px;margin-bottom:4px;"><span class="match-prompt">${p.prompt}</span><span style="color:#cec3cf;align-self:center;">→</span><span class="match-response">${p.response}</span></div>`).join("");
-  div.innerHTML = body;
-  return div;
-}
-
-function deleteQ(idx) {
-  questions.splice(idx, 1);
-  renderQuestions();
-  document.getElementById("preview-meta").textContent = `${document.getElementById("year-level").value} · ${questions.length} questions`;
-}
+function deleteQ(idx) { questions.splice(idx,1); renderQuestions(); document.getElementById("preview-count").textContent=questions.length+" questions"; }
 
 function startEdit(idx) {
-  const q = questions[idx];
-  const card = document.getElementById("questions-list").children[idx];
-  const badge = `<span class="badge" style="background:${BADGES[q.type]};color:${BADGE_TEXT[q.type]}">${LABELS[q.type]}</span>`;
-  let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">${badge}<span style="font-size:11px;color:#999;">Q${idx+1}</span></div>`;
-
-  if (q.type==="mcq") {
-    html += `<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea>`;
-    q.options.forEach((o,i) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><input type="radio" name="correct" value="${i}" ${q.correct===i?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"><span style="font-size:11px;color:#c59f40;">${q.correct===i?"✓":""}</span></div>`; });
-  } else if (q.type==="mcq-multi") {
-    html += `<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea><p style="font-size:11px;color:#888;margin-bottom:6px;">Tick all correct answers:</p>`;
-    q.options.forEach((o,i) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><input type="checkbox" name="correct-multi" value="${i}" ${q.correct.includes(i)?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`; });
-  } else if (q.type==="drag-blank") {
-    html += `<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea>
-    <label class="edit-label">Sentence (use ___ for blank)</label><input id="e-sentence" class="edit-input" style="margin-bottom:6px;" value="${q.sentence}">
-    <label class="edit-label">Correct Answer(s) — comma separated</label><input id="e-blanks" class="edit-input" style="margin-bottom:6px;" value="${q.blanks.join(", ")}">
-    <label class="edit-label">Distractors — comma separated</label><input id="e-distractors" class="edit-input" value="${q.distractors.join(", ")}">`;
-  } else if (q.type==="drag-order") {
-    html += `<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea><label class="edit-label">Items (in correct order)</label>`;
-    q.correctOrder.forEach((oi,pos) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:11px;color:#888;width:16px;">${pos+1}.</span><input class="edit-input e-item" style="flex:1;" data-orig="${oi}" value="${q.items[oi]}"></div>`; });
-  } else if (q.type==="match") {
-    html += `<label class="edit-label">Stimulus</label><input id="e-stimulus" class="edit-input" style="margin-bottom:6px;" value="${q.stimulus}"><label class="edit-label">Pairs (Prompt → Response)</label>`;
-    q.pairs.forEach((p,i) => { html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input class="edit-input e-prompt" data-idx="${i}" value="${p.prompt}" style="flex:1;"><span style="color:#cec3cf;">→</span><input class="edit-input e-response" data-idx="${i}" value="${p.response}" style="flex:1;"></div>`; });
+  const q=questions[idx], card=document.getElementById("questions-list").children[idx];
+  const [bg,col]=BCOLORS[q.type];
+  let h=`<div class="q-card-top"><span class="q-badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><span style="font-size:10px;color:rgba(46,54,26,0.3);">Q${idx+1}</span></div>`;
+  if(q.type==="mcq"){
+    h+=`<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea>`;
+    q.options.forEach((o,i)=>{h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input type="radio" name="correct" value="${i}" ${q.correct===i?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`;});
+  } else if(q.type==="mcq-multi"){
+    h+=`<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea><p style="font-size:10px;color:rgba(46,54,26,0.4);margin-bottom:6px;">Tick all correct:</p>`;
+    q.options.forEach((o,i)=>{h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input type="checkbox" name="correct-multi" value="${i}" ${q.correct.includes(i)?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`;});
+  } else if(q.type==="drag-blank"){
+    h+=`<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea>`;
+    h+=`<label class="edit-label">Sentence (use ___ for blank)</label><input id="e-sentence" class="edit-input" style="margin-bottom:6px;" value="${q.sentence}">`;
+    h+=`<label class="edit-label">Answers (comma separated)</label><input id="e-blanks" class="edit-input" style="margin-bottom:6px;" value="${q.blanks.join(", ")}">`;
+    h+=`<label class="edit-label">Distractors</label><input id="e-distractors" class="edit-input" value="${q.distractors.join(", ")}">`;
+  } else if(q.type==="drag-order"){
+    h+=`<textarea id="e-q" class="edit-input" rows="2" style="margin-bottom:6px;">${q.question}</textarea><label class="edit-label">Items (correct order)</label>`;
+    q.correctOrder.forEach((oi,p)=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:10px;color:rgba(46,54,26,0.3);width:14px;">${p+1}.</span><input class="edit-input e-item" data-orig="${oi}" value="${q.items[oi]}" style="flex:1;"></div>`;});
+  } else if(q.type==="match"){
+    h+=`<label class="edit-label">Stimulus</label><input id="e-stimulus" class="edit-input" style="margin-bottom:6px;" value="${q.stimulus}"><label class="edit-label">Pairs</label>`;
+    q.pairs.forEach((p,i)=>{h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><input class="edit-input e-prompt" data-idx="${i}" value="${p.prompt}" style="flex:1;"><span style="color:rgba(46,54,26,0.2);font-size:10px;">→</span><input class="edit-input e-response" data-idx="${i}" value="${p.response}" style="flex:1;"></div>`;});
   }
-
-  html += `<div class="edit-btn-row"><button onclick="saveEdit(${idx})" class="btn-small-purple">Save</button><button onclick="renderQuestions()" class="btn-small-light">Cancel</button></div>`;
-  card.innerHTML = html;
+  h+=`<div class="edit-btn-row"><button onclick="saveEdit(${idx})" class="edit-btn-save">Save</button><button onclick="renderQuestions()" class="edit-btn-cancel">Cancel</button></div>`;
+  card.innerHTML=h;
 }
 
 function saveEdit(idx) {
-  const q = questions[idx];
-  if (q.type==="mcq") {
-    q.question = document.getElementById("e-q").value;
-    q.options = q.options.map((_,i) => document.getElementById(`e-opt-${i}`).value);
-    q.correct = parseInt(document.querySelector('input[name="correct"]:checked').value);
-  } else if (q.type==="mcq-multi") {
-    q.question = document.getElementById("e-q").value;
-    q.options = q.options.map((_,i) => document.getElementById(`e-opt-${i}`).value);
-    q.correct = [...document.querySelectorAll('input[name="correct-multi"]:checked')].map(el => parseInt(el.value));
-  } else if (q.type==="drag-blank") {
-    q.question = document.getElementById("e-q").value;
-    q.sentence = document.getElementById("e-sentence").value;
-    q.blanks = document.getElementById("e-blanks").value.split(",").map(s=>s.trim());
-    q.distractors = document.getElementById("e-distractors").value.split(",").map(s=>s.trim());
-  } else if (q.type==="drag-order") {
-    q.question = document.getElementById("e-q").value;
-    document.querySelectorAll(".e-item").forEach(el => { q.items[parseInt(el.dataset.orig)] = el.value; });
-  } else if (q.type==="match") {
-    q.stimulus = document.getElementById("e-stimulus").value;
-    document.querySelectorAll(".e-prompt").forEach(el => { q.pairs[parseInt(el.dataset.idx)].prompt = el.value; });
-    document.querySelectorAll(".e-response").forEach(el => { q.pairs[parseInt(el.dataset.idx)].response = el.value; });
-  }
+  const q=questions[idx];
+  if(q.type==="mcq"){q.question=document.getElementById("e-q").value;q.options=q.options.map((_,i)=>document.getElementById(`e-opt-${i}`).value);q.correct=parseInt(document.querySelector('input[name="correct"]:checked').value);}
+  else if(q.type==="mcq-multi"){q.question=document.getElementById("e-q").value;q.options=q.options.map((_,i)=>document.getElementById(`e-opt-${i}`).value);q.correct=[...document.querySelectorAll('input[name="correct-multi"]:checked')].map(el=>parseInt(el.value));}
+  else if(q.type==="drag-blank"){q.question=document.getElementById("e-q").value;q.sentence=document.getElementById("e-sentence").value;q.blanks=document.getElementById("e-blanks").value.split(",").map(s=>s.trim());q.distractors=document.getElementById("e-distractors").value.split(",").map(s=>s.trim());}
+  else if(q.type==="drag-order"){q.question=document.getElementById("e-q").value;document.querySelectorAll(".e-item").forEach(el=>{q.items[parseInt(el.dataset.orig)]=el.value;});}
+  else if(q.type==="match"){q.stimulus=document.getElementById("e-stimulus").value;document.querySelectorAll(".e-prompt").forEach(el=>{q.pairs[parseInt(el.dataset.idx)].prompt=el.value;});document.querySelectorAll(".e-response").forEach(el=>{q.pairs[parseInt(el.dataset.idx)].response=el.value;});}
   renderQuestions();
 }
 
 function exportJSON() {
-  const topic = document.getElementById("topic").value.trim();
-  const payload = buildSchoolBoxJSON(questions, topic);
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${topic.replace(/\s+/g,"_")}_quiz.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const topic=document.getElementById("topic").value.trim();
+  const payload=buildSchoolBoxJSON(questions,topic);
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 function setLoading(on) {
-  document.getElementById("gen-btn").textContent = on ? "⏳ Generating Questions..." : "✨ Generate Quiz";
-  document.getElementById("gen-btn").disabled = on;
-  const r = document.getElementById("regen-btn");
-  if (r) { r.textContent = on ? "Regenerating..." : "🔄 Regenerate"; r.disabled = on; }
+  document.getElementById("gen-btn").textContent=on?"Generating...":"Generate quiz →";
+  document.getElementById("gen-btn").disabled=on;
+  const r=document.getElementById("regen-btn"); if(r){r.textContent=on?"Generating...":"Regenerate";r.disabled=on;}
 }
-
-function showError(msg) {
-  const el = document.getElementById("form-error");
-  el.textContent = msg; el.classList.remove("hidden");
-  setTimeout(() => el.classList.add("hidden"), 5000);
-}
+function showError(msg) { const el=document.getElementById("form-error"); el.textContent=msg; el.classList.remove("hidden"); setTimeout(()=>el.classList.add("hidden"),5000); }
 </script>
 </body>
 </html>
