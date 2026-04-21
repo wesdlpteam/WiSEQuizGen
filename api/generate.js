@@ -1,11 +1,5 @@
 export default async function handler(req, res) {
-  // Only allow POST
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   // Allow requests from your GitHub Pages domain
-  // Replace with your actual GitHub Pages URL
   const allowedOrigins = [
     "https://wesdlpteam.github.io",
     "http://localhost:5500",
@@ -14,8 +8,18 @@ export default async function handler(req, res) {
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  res.setHeader("Access-Control-Allow-Methods", "POST");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle CORS preflight request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // Only allow POST
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
     const { prompt } = req.body;
