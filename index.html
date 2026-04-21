@@ -7,19 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:#F9F6E7; min-height:100vh; padding:24px 16px; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#F9F6E7; padding:16px; }
   .wrap { max-width:640px; margin:0 auto; }
   .hidden { display:none!important; }
 
-  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
   .logo-mark { font-size:11px; font-weight:600; letter-spacing:2px; color:#2E361A; text-transform:uppercase; }
   .sticker { display:inline-block; background:white; border-radius:6px; padding:4px 10px; font-size:10px; font-weight:600; color:#2E361A; letter-spacing:0.5px; border:1px solid rgba(46,54,26,0.06); }
   .sticker.purple { background:#7C5CFF; color:white; border:none; }
   .sticker.green { background:#A2FF5E; color:#2E361A; border:none; }
   .sticker.yellow { background:#F3E03B; color:#2E361A; border:none; }
 
-  .hero-type { margin-bottom:28px; }
-  .hero-type h1 { font-size:52px; font-weight:900; color:#2E361A; letter-spacing:-2.5px; line-height:0.95; margin-bottom:8px; }
+  .hero-type { margin-bottom:20px; }
+  .hero-type h1 { font-size:52px; font-weight:900; color:#2E361A; letter-spacing:-2.5px; line-height:0.95; margin-bottom:4px; }
   .hero-type h1 span.hl { background:#F3E03B; padding:0 8px; border-radius:6px; display:inline-block; }
   .hero-type p { font-size:13px; color:rgba(46,54,26,0.45); font-weight:500; letter-spacing:0.3px; }
 
@@ -42,11 +42,13 @@
   input[type=range] { width:100%; accent-color:#F3E03B; height:6px; cursor:pointer; }
 
   .types-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-  .type-pill { border-radius:999px; padding:7px 16px; font-size:11px; font-weight:700; letter-spacing:0.2px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; position:relative; user-select:none; }
+  .type-pill { border-radius:999px; padding:7px 10px 7px 16px; font-size:11px; font-weight:700; letter-spacing:0.2px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; position:relative; user-select:none; display:inline-flex; align-items:center; gap:6px; }
   .type-pill.on { border-color:#2E361A; }
   .type-pill.off { background:rgba(46,54,26,0.06); color:rgba(46,54,26,0.35); }
+  .info-btn { width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,0.12); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; cursor:pointer; line-height:1; flex-shrink:0; }
 
   .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:#2E361A; color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; letter-spacing:0; }
+  .tooltip.show { display:block; }
   .tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:#2E361A; }
   .tooltip .tt-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.5; margin-bottom:6px; }
   .tooltip .tt-q { font-size:12px; font-weight:600; margin-bottom:6px; line-height:1.4; }
@@ -54,13 +56,28 @@
   .tooltip .tt-opt { font-size:11px; padding:3px 8px; border-radius:4px; margin-bottom:2px; }
   .tooltip .tt-correct { background:rgba(243,224,59,0.15); color:#F3E03B; font-weight:600; }
   .tooltip .tt-wrong { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
-  .type-pill:hover .tooltip { display:block; }
+  @media (hover:hover) { .type-pill:hover .tooltip { display:block; } }
 
-  .gen-btn { width:100%; background:#2E361A; color:#F3E03B; border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; letter-spacing:-0.3px; cursor:pointer; margin-top:16px; font-family:'Inter',sans-serif; transition:opacity 0.15s; }
+  .cards-grid { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .card { border-radius:14px; padding:16px; flex:1; min-width:0; }
+
+  @media (max-width:600px) {
+    .hero-type h1 { font-size:38px; letter-spacing:-1.5px; }
+    .cards-grid { flex-direction:column; }
+    .card.yellow, .card.green { max-width:100%!important; }
+    .cards-grid:first-of-type { flex-direction:row; flex-wrap:wrap; }
+    .cards-grid:first-of-type .card.dark { flex:1 1 100%; }
+    .cards-grid:first-of-type .card.yellow,
+    .cards-grid:first-of-type .card.green { flex:1 1 45%; }
+    .top-bar { flex-wrap:wrap; gap:8px; }
+    .tooltip { left:0; transform:none; width:240px; }
+  }
+
+  .gen-btn { width:100%; background:#2E361A; color:#F3E03B; border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; letter-spacing:-0.3px; cursor:pointer; margin-top:12px; font-family:'Inter',sans-serif; transition:opacity 0.15s; }
   .gen-btn:hover { opacity:0.9; }
   .gen-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
-  .bottom-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+  .bottom-row { display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
   .powered { font-size:10px; color:rgba(46,54,26,0.2); font-weight:600; letter-spacing:1px; }
 
   .q-card { background:white; border-radius:14px; padding:16px; border:1px solid rgba(46,54,26,0.06); margin-bottom:10px; }
@@ -144,7 +161,7 @@
     <button onclick="generateQuiz()" id="gen-btn" class="gen-btn">Generate quiz →</button>
     <div class="bottom-row">
       <span class="powered">POWERED BY OPENAI</span>
-      <span class="sticker green">Australian Curriculum</span>
+      <span class="sticker green">Australian Curriculum Aligned</span>
     </div>
   </div>
 
@@ -211,7 +228,17 @@ TYPES.forEach(t => {
   }
   tooltipHTML += `</div>`;
 
-  pill.innerHTML = t.label + tooltipHTML;
+  pill.innerHTML = `<span class="pill-label">${t.label}</span><span class="info-btn">?</span>` + tooltipHTML;
+  pill.onclick = () => toggleType(pill, t);
+
+  pill.querySelector(".info-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const tt = pill.querySelector(".tooltip");
+    const isShowing = tt.classList.contains("show");
+    document.querySelectorAll(".tooltip.show").forEach(el => el.classList.remove("show"));
+    if (!isShowing) tt.classList.add("show");
+  });
+
   pillContainer.appendChild(pill);
 });
 
@@ -220,6 +247,8 @@ function toggleType(pill, t) {
   if (isOn) { pill.classList.remove("on"); pill.classList.add("off"); pill.style.background = ""; pill.style.color = ""; }
   else { pill.classList.remove("off"); pill.classList.add("on"); pill.style.background = t.bg; pill.style.color = t.color; }
 }
+
+document.addEventListener("click", () => { document.querySelectorAll(".tooltip.show").forEach(el => el.classList.remove("show")); });
 
 function getSelectedTypes() { return [...document.querySelectorAll(".type-pill.on")].map(p => p.dataset.key); }
 
