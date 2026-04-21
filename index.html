@@ -47,8 +47,9 @@
   .type-pill.off { background:rgba(46,54,26,0.06); color:rgba(46,54,26,0.35); }
   .info-btn { width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,0.12); display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; cursor:pointer; line-height:1; flex-shrink:0; }
 
-  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:#2E361A; color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; letter-spacing:0; }
+  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:#2E361A; color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; letter-spacing:0; pointer-events:none; }
   .tooltip.show { display:block; }
+  .type-pill:hover > .tooltip { display:block; }
   .tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:#2E361A; }
   .tooltip .tt-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.5; margin-bottom:6px; }
   .tooltip .tt-q { font-size:12px; font-weight:600; margin-bottom:6px; line-height:1.4; }
@@ -56,8 +57,6 @@
   .tooltip .tt-opt { font-size:11px; padding:3px 8px; border-radius:4px; margin-bottom:2px; }
   .tooltip .tt-correct { background:rgba(243,224,59,0.15); color:#F3E03B; font-weight:600; }
   .tooltip .tt-wrong { background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); }
-  @media (hover:hover) { .type-pill:hover .tooltip { display:block; } }
-
   .cards-grid { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
   .card { border-radius:14px; padding:16px; flex:1; min-width:0; }
 
