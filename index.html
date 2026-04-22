@@ -41,8 +41,8 @@
   .badge { font-size:11px; font-weight:600; padding:2px 10px; border-radius:999px; display:inline-block; }
 
   /* Tooltips */
-  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%); background:var(--dark-text); color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; pointer-events:none; }
-  .tooltip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:var(--dark-text); }
+  .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); right:0; background:var(--dark-text); color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; pointer-events:none; }
+  .tooltip::after { content:''; position:absolute; top:100%; right:20px; border:6px solid transparent; border-top-color:var(--dark-text); }
   label.type-option:hover > .tooltip { display:block; }
   .tooltip.show { display:block; }
   .tooltip .tt-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.5; margin-bottom:6px; }
@@ -78,7 +78,7 @@
   a { color:var(--gold); }
 
   @media (max-width:600px) {
-    .tooltip { left:0; transform:none; width:240px; }
+    .tooltip { right:0; width:240px; }
   }
 </style>
 </head>
