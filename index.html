@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Wesley Quiz Engine v1</title>
+<title>Wesley Quiz Builder</title>
 <style>
   :root {
     --purple: #4f2759;
@@ -88,15 +88,25 @@
   <!-- FORM -->
   <div id="form-section">
     <div style="text-align:center;margin-bottom:20px;padding-top:8px;">
-     
-      <h1 style="font-size:26px;font-weight:700;color:var(--purple);margin:0 0 4px;">Quiz Engine</h1>
-      <!--<p class="subtitle">AI-powered · Australian Curriculum aligned · School Box JSON export</p>-->
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:10px;">📚 Wesley College · School Box LMS</div>
+      <h1 style="font-size:26px;font-weight:700;color:var(--purple);margin:0 0 4px;">Quiz Builder</h1>
+      <p class="subtitle">AI-powered · Australian Curriculum aligned · School Box JSON export</p>
     </div>
 
     <div class="card">
       <div style="margin-bottom:16px;">
         <label class="label">Area of Study / Topic</label>
         <input id="topic" type="text" placeholder="e.g. Photosynthesis, World War II, Algebra..." class="input"/>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="label" style="margin-bottom:0;">Source Material <span style="font-weight:400;color:#999;">— optional</span></label>
+          <button id="source-toggle" onclick="toggleSource()" style="font-size:11px;font-weight:600;color:var(--purple);background:var(--light-purple);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">+ Add text</button>
+        </div>
+        <div id="source-section" class="hidden">
+          <textarea id="source-text" class="input" rows="8" placeholder="Paste textbook content, articles, notes, or any text here. Questions will be generated directly from this material." style="resize:vertical;font-size:12px;line-height:1.5;"></textarea>
+          <p style="font-size:10px;color:#999;margin-top:4px;">Questions will be based on this text instead of general knowledge.</p>
+        </div>
       </div>
       <div style="display:flex;gap:12px;margin-bottom:16px;">
         <div style="flex:1;">
@@ -125,8 +135,8 @@
       <button onclick="generateQuiz()" id="gen-btn" class="btn-primary">✨ Generate Quiz</button>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:0 4px;">
-     <!-- <span style="font-size:10px;color:var(--grey-purple);font-weight:600;">Powered by OpenAI</span>
-      <span style="font-size:10px;font-weight:600;color:var(--purple);background:var(--light-gold);padding:3px 10px;border-radius:999px;">Australian Curriculum Aligned</span>-->
+      <span style="font-size:10px;color:var(--grey-purple);font-weight:600;">Powered by OpenAI</span>
+      <span style="font-size:10px;font-weight:600;color:var(--purple);background:var(--light-gold);padding:3px 10px;border-radius:999px;">Australian Curriculum Aligned</span>
     </div>
   </div>
 
@@ -145,7 +155,7 @@
       <button onclick="exportJSON()" class="btn-gold">⬇️ Export .json</button>
     </div>
   </div>
- <div style="display:inline-flex;align-items:center;gap:8px;background:var(--purple);color:white;padding:8px 20px;border-radius:999px;font-size:13px;font-weight:600;margin-bottom:10px;">&copy; Wesley College 2026 </div>
+
 </div>
 
 <script>
@@ -230,16 +240,31 @@ async function generateQuiz() {
     "drag-order":`{"type":"drag-order","question":"Order the steps correctly.","items":["Step A","Step B","Step C","Step D"],"correctOrder":[0,1,2,3]}`,
     "match":`{"type":"match","stimulus":"Match each item.","pairs":[{"prompt":"A","response":"1"},{"prompt":"B","response":"2"},{"prompt":"C","response":"3"}]}`
   };
+  const sourceText = document.getElementById("source-text").value.trim();
+
+  let sourceInstruction = "";
+  if (sourceText) {
+    sourceInstruction = `
+
+IMPORTANT — SOURCE MATERIAL:
+The following text has been provided as source material. ALL questions MUST be generated directly from this content. Do not use general knowledge — only create questions that can be answered from the text below.
+
+--- SOURCE MATERIAL START ---
+${sourceText}
+--- SOURCE MATERIAL END ---
+`;
+  }
+
   const prompt = `You are an educational quiz creator for Australian schools. All questions MUST align with the Australian Curriculum (ACARA v9.0) content descriptions for ${yearLevel}.
 
 Create a quiz for ${yearLevel} students on: "${topic}".
 Generate exactly ${n} questions:
 ${breakdown}
-
+${sourceInstruction}
 IMPORTANT:
 - All content must be appropriate for ${yearLevel} students as defined by the Australian Curriculum.
 - Questions should reflect the knowledge, understanding and skills outlined in the relevant ACARA content descriptions.
-- Use Australian English spelling (e.g. colour, analyse, organisation).
+- Use Australian English spelling (e.g. colour, analyse, organisation).${sourceText ? "\n- ALL questions must be answerable from the provided source material." : ""}
 
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
 
@@ -328,6 +353,19 @@ function exportJSON() {
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function toggleSource() {
+  const section = document.getElementById("source-section");
+  const btn = document.getElementById("source-toggle");
+  if (section.classList.contains("hidden")) {
+    section.classList.remove("hidden");
+    btn.textContent = "− Remove text";
+  } else {
+    section.classList.add("hidden");
+    btn.textContent = "+ Add text";
+    document.getElementById("source-text").value = "";
+  }
 }
 
 function setLoading(on) {
