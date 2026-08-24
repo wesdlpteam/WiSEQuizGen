@@ -81,6 +81,8 @@
     .tooltip { right:0; width:240px; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -101,11 +103,21 @@
       <div style="margin-bottom:16px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <label class="label" style="margin-bottom:0;">Source Material <span style="font-weight:400;color:#999;">— optional</span></label>
-          <button id="source-toggle" onclick="toggleSource()" style="font-size:11px;font-weight:600;color:var(--purple);background:var(--light-purple);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">+ Add text</button>
+          <button id="source-toggle" onclick="toggleSource()" style="font-size:11px;font-weight:600;color:var(--purple);background:var(--light-purple);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;">+ Add source</button>
         </div>
         <div id="source-section" class="hidden">
-          <textarea id="source-text" class="input" rows="8" placeholder="Paste textbook content, articles, notes, or any text here. Questions will be generated directly from this material." style="resize:vertical;font-size:12px;line-height:1.5;"></textarea>
-          <p style="font-size:10px;color:#999;margin-top:4px;">Questions will be based on this text instead of general knowledge.</p>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px dashed var(--grey-purple);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--purple);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--grey-purple)'">
+              📄 Upload PDF or PPTX
+              <input type="file" id="file-upload" accept=".pdf,.pptx" onchange="handleFileUpload(this)" style="display:none;"/>
+            </label>
+          </div>
+          <div id="file-status" class="hidden" style="font-size:11px;color:var(--purple);background:var(--light-purple);padding:6px 10px;border-radius:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+            <span id="file-name"></span>
+            <button onclick="clearFile()" style="font-size:10px;color:var(--purple);background:none;border:none;cursor:pointer;text-decoration:underline;">Clear</button>
+          </div>
+          <textarea id="source-text" class="input" rows="6" placeholder="Or paste text directly here. Uploaded file content will also appear here for review." style="resize:vertical;font-size:12px;line-height:1.5;"></textarea>
+          <p style="font-size:10px;color:#999;margin-top:4px;">Questions will be based on this content instead of general knowledge.</p>
         </div>
       </div>
       <div style="display:flex;gap:12px;margin-bottom:16px;">
@@ -215,10 +227,57 @@ function buildSchoolBoxJSON(qs, topic) {
     if(q.type==="mcq"){qm.push({reference:ref,type:"mcq"});qMap[ref]={type:"mcq",widget_type:"response",reference:ref,data:{options:q.options.map((l,i)=>({label:`<h4>${l}</h4>\n`,value:String(i)})),stimulus:`<h3>${q.question}</h3>\n`,type:"mcq",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:[String(q.correct)]}},ui_style:{choice_label:"upper-alpha",type:"block"}},metadata:{name:"Multiple choice – block layout",template_reference:"33d53a22-1a59-4a03-9671-7f5104edd62e"}};}
     else if(q.type==="mcq-multi"){qm.push({reference:ref,type:"mcq"});qMap[ref]={type:"mcq",widget_type:"response",reference:ref,data:{multiple_responses:true,options:q.options.map((l,i)=>({label:l,value:String(i)})),stimulus:q.question,type:"mcq",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:q.correct.map(String)}},ui_style:{type:"horizontal"}},metadata:{name:"Multiple choice – multiple response",template_reference:"908de244-5c71-4c09-b094-7fb49554f2f9"}};}
     else if(q.type==="drag-blank"){qm.push({reference:ref,type:"clozeassociation"});const all=[...q.blanks,...q.distractors].sort(()=>Math.random()-0.5);qMap[ref]={type:"clozeassociation",widget_type:"response",reference:ref,data:{possible_responses:all.map(r=>`<h4>${r}</h4>\n`),response_container:{pointer:"left"},stimulus:`<h4>Complete the sentence</h4>\n`,template:`<h4>${q.sentence.replace(/___/g,"{{response}}")}</h4>\n`,type:"clozeassociation",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:q.blanks.map(()=>null)}}},metadata:{name:"Cloze with drag & drop",template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb"}};}
-    else if(q.type==="drag-order"){qm.push({reference:ref,type:"clozeassociation"});const ord=q.correctOrder.map(i=>q.items[i]);qMap[ref]={type:"clozeassociation",widget_type:"response",reference:ref,data:{possible_responses:[...q.items].sort(()=>Math.random()-0.5).map(r=>`<h4>${r}</h4>\n`),response_container:{pointer:"left"},stimulus:`<h4>${q.question}</h4>\n`,template:`<h4>${ord.map(()=>"{{response}}").join("<br/>")}</h4>\n`,type:"clozeassociation",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:ord.map(()=>null)}}},metadata:{name:"Order with drag & drop",template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb"}};}
-    else if(q.type==="match"){qm.push({reference:ref,type:"association"});qMap[ref]={type:"association",widget_type:"response",reference:ref,data:{possible_responses:q.pairs.map(p=>p.response),stimulus:q.stimulus,stimulus_list:q.pairs.map(p=>p.prompt),type:"association",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:q.pairs.map(p=>p.response)}}},metadata:{name:"Match list",template_reference:"1fa22aac-1f88-47f7-941b-3c77759549e6"}};}
+    else if(q.type==="drag-order"){qm.push({reference:ref,type:"clozeassociation"});const safeOrder=Array.isArray(q.correctOrder)?q.correctOrder:q.items.map((_,i)=>i);const ord=safeOrder.map(i=>q.items[i]||"").filter(Boolean);qMap[ref]={type:"clozeassociation",widget_type:"response",reference:ref,data:{possible_responses:[...q.items].sort(()=>Math.random()-0.5).map(r=>`<h4>${r}</h4>\n`),response_container:{pointer:"left"},stimulus:`<h4>${q.question}</h4>\n`,template:`<h4>${ord.map(()=>"{{response}}").join("<br/>")}</h4>\n`,type:"clozeassociation",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:ord.map(()=>null)}}},metadata:{name:"Order with drag & drop",template_reference:"51a8c1e7-f34f-4faf-b211-da458e891fcb"}};}
+    else if(q.type==="match"){qm.push({reference:ref,type:"association"});const safePairs=Array.isArray(q.pairs)?q.pairs.filter(p=>p&&p.prompt&&p.response):[];qMap[ref]={type:"association",widget_type:"response",reference:ref,data:{possible_responses:safePairs.map(p=>p.response),stimulus:q.stimulus||"Match each item.",stimulus_list:safePairs.map(p=>p.prompt),type:"association",validation:{scoring_type:"exactMatch",valid_response:{score:1,value:safePairs.map(p=>p.response)}}},metadata:{name:"Match list",template_reference:"1fa22aac-1f88-47f7-941b-3c77759549e6"}};}
   });
   return {settings:{title:`${topic} Quiz`,description:"<p>Complete this quiz to demonstrate your understanding.</p>",workType:"Learning Task",dates:{publishAt:null,openAt:null,dueAt:null,closeAt:null},weight:0,shuffleItems:0,promptsMode:0,maxAttempts:0,duration:0,readingTimeDuration:0,completionMessage:"",defaultOpenSpan:null,curriculumNodes:[],markType:"raw",gradeGroup:"Standard",markScheme:"TotalMarkFractional",markVisibility:2,creator:null,context:null,sequence:null},assets:[],content:{activities:{[actRef]:{reference:actRef,title:null,description:"",data:{rendering_type:"assess",config:{configuration:{idle_timeout:{interval:300}},navigation:{show_intro:false,show_outro:false},regions:{"top-left":[{type:"title_element"}],"top-right":[{type:"itemcount_element"},{type:"reading_timer_element"},{type:"timer_element"}],items:[{type:"progress_element"},{type:"slider_element"}],right:[{type:"save_button"},{type:"reviewscreen_button"},{type:"resource_button"},{type:"flagitem_button"},{type:"masking_button"},{type:"verticaltoc_element"}],"bottom-left":[{type:"previous_button",show_label_option:true}],"bottom-right":[{type:"next_button"}]}},items:[{reference:itemRef,id:itemRef}]},status:"published",adaptive:{difficulty:null,operational_exposure:null,seeding_exposure:null}}},items:{[itemRef]:{reference:itemRef,title:topic,workflow:null,metadata:null,note:"",source:"",definition:{widgets:wr,template:"dynamic"},description:"",status:"published",questions:qm,features:[]}},questions:qMap,features:[]}};
+}
+
+function validateAndFixQuestions(qs) {
+  const valid = [];
+  const warnings = [];
+  qs.forEach((q, i) => {
+    try {
+      if (q.type === "mcq") {
+        if (!q.question || !Array.isArray(q.options) || q.options.length < 2) { warnings.push(`Q${i+1} (MCQ): missing question or options — removed.`); return; }
+        if (typeof q.correct !== "number" || q.correct < 0 || q.correct >= q.options.length) q.correct = 0;
+        valid.push(q);
+      } else if (q.type === "mcq-multi") {
+        if (!q.question || !Array.isArray(q.options) || q.options.length < 2) { warnings.push(`Q${i+1} (MCQ Multi): missing question or options — removed.`); return; }
+        if (!Array.isArray(q.correct)) q.correct = [0];
+        q.correct = q.correct.filter(c => typeof c === "number" && c >= 0 && c < q.options.length);
+        if (q.correct.length === 0) q.correct = [0];
+        valid.push(q);
+      } else if (q.type === "drag-blank") {
+        if (!q.sentence || !Array.isArray(q.blanks) || q.blanks.length === 0) { warnings.push(`Q${i+1} (Fill blank): missing sentence or blanks — removed.`); return; }
+        if (!Array.isArray(q.distractors)) q.distractors = [];
+        if (!q.question) q.question = "Complete the sentence.";
+        valid.push(q);
+      } else if (q.type === "drag-order") {
+        if (!Array.isArray(q.items) || q.items.length < 2) { warnings.push(`Q${i+1} (Order): missing or too few items — removed.`); return; }
+        if (!Array.isArray(q.correctOrder) || q.correctOrder.length !== q.items.length) {
+          q.correctOrder = q.items.map((_, idx) => idx);
+        }
+        const maxIdx = q.items.length - 1;
+        const hasInvalid = q.correctOrder.some(idx => typeof idx !== "number" || idx < 0 || idx > maxIdx);
+        if (hasInvalid) q.correctOrder = q.items.map((_, idx) => idx);
+        if (!q.question) q.question = "Order the following steps correctly.";
+        valid.push(q);
+      } else if (q.type === "match") {
+        if (!Array.isArray(q.pairs) || q.pairs.length < 2) { warnings.push(`Q${i+1} (Match): missing or too few pairs — removed.`); return; }
+        const validPairs = q.pairs.filter(p => p && p.prompt && p.response);
+        if (validPairs.length < 2) { warnings.push(`Q${i+1} (Match): pairs missing prompt/response fields — removed.`); return; }
+        q.pairs = validPairs;
+        if (!q.stimulus) q.stimulus = "Match each item.";
+        valid.push(q);
+      } else {
+        warnings.push(`Q${i+1}: unknown type "${q.type}" — removed.`);
+      }
+    } catch (e) {
+      warnings.push(`Q${i+1}: malformed data — removed.`);
+    }
+  });
+  return { valid, warnings };
 }
 
 async function generateQuiz() {
@@ -276,7 +335,10 @@ Return ONLY the JSON array.`;
     const res = await fetch(VERCEL_API, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({prompt}) });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    questions = JSON.parse(data.result.replace(/```json|```/g,"").trim());
+    const parsed = JSON.parse(data.result.replace(/```json|```/g,"").trim());
+    const { valid, warnings } = validateAndFixQuestions(parsed);
+    questions = valid;
+    if (warnings.length > 0) console.log("Quiz validation warnings:", warnings);
     showPreview(topic, yearLevel);
   } catch(e) { showError("Failed: " + e.message); }
   setLoading(false);
@@ -298,15 +360,18 @@ function renderQuestions() { const l=document.getElementById("questions-list"); 
 
 function createCard(q,idx) {
   const d=document.createElement("div"); d.className="q-card";
-  const [bg,col]=BCOLORS[q.type];
-  let h=`<div class="q-card-top"><span class="badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><div class="q-actions"><button onclick="startEdit(${idx})" style="color:#4f2759;">Edit</button><button onclick="deleteQ(${idx})" style="color:rgba(46,54,26,0.25);">Delete</button></div></div>`;
+  try {
+  const [bg,col]=BCOLORS[q.type]||["#cec3cf","#2d1a33"];
+  let h=`<div class="q-card-top"><span class="badge" style="background:${bg};color:${col};">${BLABELS[q.type]||q.type}</span><div class="q-actions"><button onclick="startEdit(${idx})" style="color:#4f2759;">Edit</button><button onclick="deleteQ(${idx})" style="color:rgba(46,54,26,0.25);">Delete</button></div></div>`;
   h+=`<div class="q-text">${q.question||q.stimulus||""}</div>`;
-  if(q.type==="mcq") h+=q.options.map((o,i)=>`<div class="option-item ${i===q.correct?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o}${i===q.correct?" ✓":""}</div>`).join("");
-  if(q.type==="mcq-multi") h+=q.options.map((o,i)=>`<div class="option-item ${q.correct.includes(i)?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o}${q.correct.includes(i)?" ✓":""}</div>`).join("");
-  if(q.type==="drag-blank") h+=`<div class="sentence-display">${q.sentence}</div><div class="q-meta">Answer: <span>${q.blanks.join(", ")}</span> · Distractors: ${q.distractors.join(", ")}</div>`;
-  if(q.type==="drag-order") h+=q.correctOrder.map((oi,p)=>`<div class="order-item"><span style="font-weight:700;">${p+1}.</span>${q.items[oi]}</div>`).join("");
-  if(q.type==="match") h+=q.pairs.map(p=>`<div class="match-row"><span class="match-prompt">${p.prompt}</span><span class="match-arrow">→</span><span class="match-response">${p.response}</span></div>`).join("");
-  d.innerHTML=h; return d;
+  if(q.type==="mcq"&&Array.isArray(q.options)) h+=q.options.map((o,i)=>`<div class="option-item ${i===q.correct?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o}${i===q.correct?" ✓":""}</div>`).join("");
+  if(q.type==="mcq-multi"&&Array.isArray(q.options)&&Array.isArray(q.correct)) h+=q.options.map((o,i)=>`<div class="option-item ${q.correct.includes(i)?"correct-item":"normal-item"}">${String.fromCharCode(65+i)}. ${o}${q.correct.includes(i)?" ✓":""}</div>`).join("");
+  if(q.type==="drag-blank"&&q.sentence) h+=`<div class="sentence-display">${q.sentence}</div><div class="q-meta">Answer: <span>${(q.blanks||[]).join(", ")}</span> · Distractors: ${(q.distractors||[]).join(", ")}</div>`;
+  if(q.type==="drag-order"&&Array.isArray(q.items)&&Array.isArray(q.correctOrder)) h+=q.correctOrder.map((oi,p)=>`<div class="order-item"><span style="font-weight:700;">${p+1}.</span>${q.items[oi]||""}</div>`).join("");
+  if(q.type==="match"&&Array.isArray(q.pairs)) h+=q.pairs.map(p=>`<div class="match-row"><span class="match-prompt">${p.prompt||""}</span><span class="match-arrow">→</span><span class="match-response">${p.response||""}</span></div>`).join("");
+  d.innerHTML=h;
+  } catch(e) { d.innerHTML=`<div class="q-card-top"><span class="badge" style="background:#b91c1c;color:white;">Error</span><div class="q-actions"><button onclick="deleteQ(${idx})" style="color:#b91c1c;">Delete</button></div></div><div class="q-text" style="color:#b91c1c;">This question has formatting errors. Please delete it.</div>`; }
+  return d;
 }
 
 function deleteQ(idx) { questions.splice(idx,1); renderQuestions(); document.getElementById("preview-meta").textContent=`${document.getElementById("year-level").value} · ${questions.length} questions`; }
@@ -360,12 +425,90 @@ function toggleSource() {
   const btn = document.getElementById("source-toggle");
   if (section.classList.contains("hidden")) {
     section.classList.remove("hidden");
-    btn.textContent = "− Remove text";
+    btn.textContent = "− Remove source";
   } else {
     section.classList.add("hidden");
-    btn.textContent = "+ Add text";
+    btn.textContent = "+ Add source";
     document.getElementById("source-text").value = "";
+    clearFile();
   }
+}
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  const statusEl = document.getElementById("file-status");
+  const nameEl = document.getElementById("file-name");
+
+  nameEl.textContent = "Extracting text from " + file.name + "...";
+  statusEl.classList.remove("hidden");
+  statusEl.style.display = "flex";
+
+  try {
+    let text = "";
+    if (name.endsWith(".pdf")) {
+      text = await extractPDF(file);
+    } else if (name.endsWith(".pptx")) {
+      text = await extractPPTX(file);
+    } else {
+      nameEl.textContent = "Unsupported file type. Please upload a PDF or PPTX.";
+      return;
+    }
+
+    if (!text.trim()) {
+      nameEl.textContent = file.name + " — no text found (may be image-based)";
+      return;
+    }
+
+    document.getElementById("source-text").value = text.trim();
+    nameEl.textContent = file.name + " — text extracted successfully";
+  } catch (e) {
+    nameEl.textContent = "Error reading " + file.name + ": " + e.message;
+  }
+}
+
+async function extractPDF(file) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(" ");
+    if (pageText.trim()) text += pageText + "\n\n";
+  }
+  return text;
+}
+
+async function extractPPTX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  let text = "";
+  const slideFiles = Object.keys(zip.files)
+    .filter(f => f.match(/^ppt\/slides\/slide\d+\.xml$/))
+    .sort((a, b) => {
+      const numA = parseInt(a.match(/slide(\d+)/)[1]);
+      const numB = parseInt(b.match(/slide(\d+)/)[1]);
+      return numA - numB;
+    });
+  for (const slidePath of slideFiles) {
+    const xml = await zip.files[slidePath].async("text");
+    const matches = xml.match(/<a:t>([^<]*)<\/a:t>/g);
+    if (matches) {
+      const slideText = matches.map(m => m.replace(/<\/?a:t>/g, "")).join(" ");
+      if (slideText.trim()) text += slideText.trim() + "\n\n";
+    }
+  }
+  return text;
+}
+
+function clearFile() {
+  const statusEl = document.getElementById("file-status");
+  statusEl.classList.add("hidden");
+  statusEl.style.display = "none";
+  document.getElementById("file-upload").value = "";
 }
 
 function setLoading(on) {
