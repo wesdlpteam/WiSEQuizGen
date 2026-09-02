@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Wesley Quiz Builder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
     --purple: #4f2759;
@@ -35,16 +37,14 @@
   .label { font-size:13px; font-weight:600; color:var(--purple); display:block; margin-bottom:6px; }
   .subtitle { color:#7a5f80; font-size:13px; }
 
-  /* Type selector */
   label.type-option { display:flex; align-items:flex-start; gap:12px; padding:10px 14px; border-radius:12px; border:2px solid var(--grey-purple); background:white; cursor:pointer; transition:all 0.15s; margin-bottom:8px; position:relative; }
   label.type-option.selected { border-color:var(--purple); background:var(--light-purple); }
   .badge { font-size:11px; font-weight:600; padding:2px 10px; border-radius:999px; display:inline-block; }
 
-  /* Tooltips */
   .tooltip { display:none; position:absolute; bottom:calc(100% + 10px); right:0; background:var(--dark-text); color:white; border-radius:10px; padding:12px 14px; width:280px; z-index:100; font-weight:400; pointer-events:none; }
-  .tooltip::after { content:''; position:absolute; top:100%; right:20px; border:6px solid transparent; border-top-color:var(--dark-text); }
-  label.type-option:hover > .tooltip { display:block; }
   .tooltip.show { display:block; }
+  label.type-option:hover > .tooltip { display:block; }
+  .tooltip::after { content:''; position:absolute; top:100%; right:20px; border:6px solid transparent; border-top-color:var(--dark-text); }
   .tooltip .tt-label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.5; margin-bottom:6px; }
   .tooltip .tt-q { font-size:12px; font-weight:600; margin-bottom:6px; line-height:1.4; }
   .tooltip .tt-detail { font-size:11px; color:rgba(255,255,255,0.55); line-height:1.4; }
@@ -52,7 +52,6 @@
   .tooltip .tt-correct { background:rgba(255,255,255,0.12); color:white; font-weight:600; }
   .tooltip .tt-wrong { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.4); }
 
-  /* Question cards */
   .q-card { background:white; border:1px solid var(--grey-purple); border-radius:16px; padding:16px; margin-bottom:12px; }
   .q-card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
   .q-text { font-size:14px; font-weight:500; color:var(--dark-text); margin-bottom:8px; }
@@ -81,8 +80,6 @@
     .tooltip { right:0; width:240px; }
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -108,8 +105,8 @@
         <div id="source-section" class="hidden">
           <div style="display:flex;gap:8px;margin-bottom:8px;">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px dashed var(--grey-purple);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--purple);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--grey-purple)'">
-              📄 Upload PDF or PPTX
-              <input type="file" id="file-upload" accept=".pdf,.pptx" onchange="handleFileUpload(this)" style="display:none;"/>
+              📄 Upload PDF, PPTX, or Image
+              <input type="file" id="file-upload" accept=".pdf,.pptx,.jpg,.jpeg,.png,.webp" onchange="handleFileUpload(this)" style="display:none;"/>
             </label>
           </div>
           <div id="file-status" class="hidden" style="font-size:11px;color:var(--purple);background:var(--light-purple);padding:6px 10px;border-radius:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
@@ -173,6 +170,7 @@
 <script>
 const VERCEL_API = "https://wi-se-quiz-gen.vercel.app/api/generate";
 let questions = [];
+let uploadedImage = null;
 
 const TYPES = [
   { key:"mcq", label:"MCQ – Single Answer", desc:"One correct answer from 4 options", badgeBg:"#4f2759", badgeText:"white", default:true,
@@ -187,6 +185,7 @@ const TYPES = [
     tooltip:`<div class="tt-label">Example</div><div class="tt-q">Match the capital to the country:</div><div style="display:flex;gap:4px;margin-bottom:2px;"><span class="tt-opt tt-wrong" style="flex:1;">Australia</span><span style="color:rgba(255,255,255,0.2);font-size:10px;align-self:center;">→</span><span class="tt-opt tt-correct" style="flex:1;">Canberra</span></div><div style="display:flex;gap:4px;margin-bottom:2px;"><span class="tt-opt tt-wrong" style="flex:1;">Japan</span><span style="color:rgba(255,255,255,0.2);font-size:10px;align-self:center;">→</span><span class="tt-opt tt-correct" style="flex:1;">Tokyo</span></div>` },
 ];
 
+const defaults = ["mcq","drag-blank","match"];
 const cb = document.getElementById("type-checkboxes");
 TYPES.forEach(t => {
   const lbl = document.createElement("label");
@@ -194,9 +193,7 @@ TYPES.forEach(t => {
   lbl.innerHTML = `<input type="checkbox" ${t.default?"checked":""} data-type="${t.key}" onchange="updateTypeStyle(this)" style="margin-top:2px;">
     <div><span class="badge" style="background:${t.badgeBg};color:${t.badgeText}">${t.label}</span><p style="font-size:11px;color:#888;margin:4px 0 0;">${t.desc}</p></div>
     <div class="tooltip">${t.tooltip}</div>`;
-
   lbl.querySelector(".tooltip").addEventListener("click", e => e.stopPropagation());
-
   const infoBtn = document.createElement("span");
   infoBtn.textContent = "?";
   infoBtn.style.cssText = "width:18px;height:18px;border-radius:50%;background:var(--grey-purple);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;margin-left:auto;color:var(--purple);";
@@ -210,14 +207,86 @@ TYPES.forEach(t => {
   lbl.appendChild(infoBtn);
   cb.appendChild(lbl);
 });
-
 document.addEventListener("click", () => { document.querySelectorAll(".tooltip.show").forEach(el => el.classList.remove("show")); });
 
-function updateTypeStyle(el) {
-  const lbl = el.closest("label");
-  if (el.checked) lbl.classList.add("selected"); else lbl.classList.remove("selected");
+function updateTypeStyle(el) { const lbl=el.closest("label"); if(el.checked) lbl.classList.add("selected"); else lbl.classList.remove("selected"); }
+function getSelectedTypes() { return [...document.querySelectorAll("input[data-type]:checked")].map(el=>el.dataset.type); }
+
+function toggleSource() {
+  const section = document.getElementById("source-section");
+  const btn = document.getElementById("source-toggle");
+  if (section.classList.contains("hidden")) { section.classList.remove("hidden"); btn.textContent = "− Remove source"; }
+  else { section.classList.add("hidden"); btn.textContent = "+ Add source"; document.getElementById("source-text").value = ""; clearFile(); }
 }
-function getSelectedTypes() { return [...document.querySelectorAll("input[data-type]:checked")].map(el => el.dataset.type); }
+
+async function handleFileUpload(input) {
+  const file = input.files[0]; if (!file) return;
+  const name = file.name.toLowerCase();
+  const statusEl = document.getElementById("file-status");
+  const nameEl = document.getElementById("file-name");
+  nameEl.textContent = "Extracting text from " + file.name + "...";
+  statusEl.classList.remove("hidden"); statusEl.style.display = "flex";
+  try {
+    let text = "";
+    if (name.endsWith(".pdf")) { text = await extractPDF(file); }
+    else if (name.endsWith(".pptx")) { text = await extractPPTX(file); }
+    else if (name.match(/\.(jpg|jpeg|png|webp)$/)) { await handleImageUpload(file); nameEl.textContent = file.name + " — image ready for analysis"; return; }
+    else { nameEl.textContent = "Unsupported file type."; return; }
+    if (!text.trim()) { nameEl.textContent = file.name + " — no text found (may be image-based)"; return; }
+    document.getElementById("source-text").value = text.trim();
+    nameEl.textContent = file.name + " — text extracted successfully";
+  } catch (e) { nameEl.textContent = "Error reading " + file.name + ": " + e.message; }
+}
+
+async function extractPDF(file) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pt = content.items.map(item => item.str).join(" ");
+    if (pt.trim()) text += pt + "\n\n";
+  }
+  return text;
+}
+
+async function extractPPTX(file) {
+  const ab = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(ab);
+  let text = "";
+  const slides = Object.keys(zip.files).filter(f => f.match(/^ppt\/slides\/slide\d+\.xml$/)).sort((a,b) => parseInt(a.match(/slide(\d+)/)[1]) - parseInt(b.match(/slide(\d+)/)[1]));
+  for (const sp of slides) {
+    const xml = await zip.files[sp].async("text");
+    const matches = xml.match(/<a:t>([^<]*)<\/a:t>/g);
+    if (matches) { const st = matches.map(m => m.replace(/<\/?a:t>/g, "")).join(" "); if (st.trim()) text += st.trim() + "\n\n"; }
+  }
+  return text;
+}
+
+async function handleImageUpload(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedImage = e.target.result;
+      document.getElementById("source-text").value = "";
+      document.getElementById("source-text").placeholder = "Image uploaded — questions will be generated from the image content. You can also add extra context here.";
+      let preview = document.getElementById("image-preview");
+      if (!preview) { preview = document.createElement("div"); preview.id = "image-preview"; preview.style.cssText = "margin-bottom:8px;border-radius:10px;overflow:hidden;border:1px solid var(--grey-purple);"; document.getElementById("file-status").after(preview); }
+      preview.innerHTML = `<img src="${uploadedImage}" style="width:100%;max-height:200px;object-fit:cover;display:block;"/>`;
+      resolve();
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function clearFile() {
+  document.getElementById("file-status").classList.add("hidden"); document.getElementById("file-status").style.display = "none";
+  document.getElementById("file-upload").value = ""; uploadedImage = null;
+  const preview = document.getElementById("image-preview"); if (preview) preview.remove();
+}
 
 function sbUUID() { const s4=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1); return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`; }
 
@@ -234,48 +303,39 @@ function buildSchoolBoxJSON(qs, topic) {
 }
 
 function validateAndFixQuestions(qs) {
-  const valid = [];
-  const warnings = [];
+  const valid = [], warnings = [];
   qs.forEach((q, i) => {
     try {
       if (q.type === "mcq") {
-        if (!q.question || !Array.isArray(q.options) || q.options.length < 2) { warnings.push(`Q${i+1} (MCQ): missing question or options — removed.`); return; }
+        if (!q.question || !Array.isArray(q.options) || q.options.length < 2) { warnings.push(`Q${i+1} removed`); return; }
         if (typeof q.correct !== "number" || q.correct < 0 || q.correct >= q.options.length) q.correct = 0;
         valid.push(q);
       } else if (q.type === "mcq-multi") {
-        if (!q.question || !Array.isArray(q.options) || q.options.length < 2) { warnings.push(`Q${i+1} (MCQ Multi): missing question or options — removed.`); return; }
+        if (!q.question || !Array.isArray(q.options) || q.options.length < 2) { warnings.push(`Q${i+1} removed`); return; }
         if (!Array.isArray(q.correct)) q.correct = [0];
         q.correct = q.correct.filter(c => typeof c === "number" && c >= 0 && c < q.options.length);
         if (q.correct.length === 0) q.correct = [0];
         valid.push(q);
       } else if (q.type === "drag-blank") {
-        if (!q.sentence || !Array.isArray(q.blanks) || q.blanks.length === 0) { warnings.push(`Q${i+1} (Fill blank): missing sentence or blanks — removed.`); return; }
+        if (!q.sentence || !Array.isArray(q.blanks) || q.blanks.length === 0) { warnings.push(`Q${i+1} removed`); return; }
         if (!Array.isArray(q.distractors)) q.distractors = [];
         if (!q.question) q.question = "Complete the sentence.";
         valid.push(q);
       } else if (q.type === "drag-order") {
-        if (!Array.isArray(q.items) || q.items.length < 2) { warnings.push(`Q${i+1} (Order): missing or too few items — removed.`); return; }
-        if (!Array.isArray(q.correctOrder) || q.correctOrder.length !== q.items.length) {
-          q.correctOrder = q.items.map((_, idx) => idx);
-        }
+        if (!Array.isArray(q.items) || q.items.length < 2) { warnings.push(`Q${i+1} removed`); return; }
+        if (!Array.isArray(q.correctOrder) || q.correctOrder.length !== q.items.length) q.correctOrder = q.items.map((_, idx) => idx);
         const maxIdx = q.items.length - 1;
-        const hasInvalid = q.correctOrder.some(idx => typeof idx !== "number" || idx < 0 || idx > maxIdx);
-        if (hasInvalid) q.correctOrder = q.items.map((_, idx) => idx);
+        if (q.correctOrder.some(idx => typeof idx !== "number" || idx < 0 || idx > maxIdx)) q.correctOrder = q.items.map((_, idx) => idx);
         if (!q.question) q.question = "Order the following steps correctly.";
         valid.push(q);
       } else if (q.type === "match") {
-        if (!Array.isArray(q.pairs) || q.pairs.length < 2) { warnings.push(`Q${i+1} (Match): missing or too few pairs — removed.`); return; }
-        const validPairs = q.pairs.filter(p => p && p.prompt && p.response);
-        if (validPairs.length < 2) { warnings.push(`Q${i+1} (Match): pairs missing prompt/response fields — removed.`); return; }
-        q.pairs = validPairs;
-        if (!q.stimulus) q.stimulus = "Match each item.";
+        if (!Array.isArray(q.pairs) || q.pairs.length < 2) { warnings.push(`Q${i+1} removed`); return; }
+        const vp = q.pairs.filter(p => p && p.prompt && p.response);
+        if (vp.length < 2) { warnings.push(`Q${i+1} removed`); return; }
+        q.pairs = vp; if (!q.stimulus) q.stimulus = "Match each item.";
         valid.push(q);
-      } else {
-        warnings.push(`Q${i+1}: unknown type "${q.type}" — removed.`);
-      }
-    } catch (e) {
-      warnings.push(`Q${i+1}: malformed data — removed.`);
-    }
+      } else { warnings.push(`Q${i+1} unknown type`); }
+    } catch (e) { warnings.push(`Q${i+1} malformed`); }
   });
   return { valid, warnings };
 }
@@ -299,19 +359,13 @@ async function generateQuiz() {
     "drag-order":`{"type":"drag-order","question":"Order the steps correctly.","items":["Step A","Step B","Step C","Step D"],"correctOrder":[0,1,2,3]}`,
     "match":`{"type":"match","stimulus":"Match each item.","pairs":[{"prompt":"A","response":"1"},{"prompt":"B","response":"2"},{"prompt":"C","response":"3"}]}`
   };
+
   const sourceText = document.getElementById("source-text").value.trim();
-
   let sourceInstruction = "";
-  if (sourceText) {
-    sourceInstruction = `
-
-IMPORTANT — SOURCE MATERIAL:
-The following text has been provided as source material. ALL questions MUST be generated directly from this content. Do not use general knowledge — only create questions that can be answered from the text below.
-
---- SOURCE MATERIAL START ---
-${sourceText}
---- SOURCE MATERIAL END ---
-`;
+  if (uploadedImage) {
+    sourceInstruction = `\n\nIMPORTANT — IMAGE SOURCE:\nAn image has been provided. Analyse the image carefully and generate ALL questions based on the content, concepts, data, or information visible in the image.${sourceText ? " Additional context: " + sourceText : ""}`;
+  } else if (sourceText) {
+    sourceInstruction = `\n\nIMPORTANT — SOURCE MATERIAL:\nALL questions MUST be generated directly from this content:\n\n--- SOURCE MATERIAL START ---\n${sourceText}\n--- SOURCE MATERIAL END ---`;
   }
 
   const prompt = `You are an educational quiz creator for Australian schools. All questions MUST align with the Australian Curriculum (ACARA v9.0) content descriptions for ${yearLevel}.
@@ -320,10 +374,11 @@ Create a quiz for ${yearLevel} students on: "${topic}".
 Generate exactly ${n} questions:
 ${breakdown}
 ${sourceInstruction}
+
 IMPORTANT:
 - All content must be appropriate for ${yearLevel} students as defined by the Australian Curriculum.
 - Questions should reflect the knowledge, understanding and skills outlined in the relevant ACARA content descriptions.
-- Use Australian English spelling (e.g. colour, analyse, organisation).${sourceText ? "\n- ALL questions must be answerable from the provided source material." : ""}
+- Use Australian English spelling (e.g. colour, analyse, organisation).${sourceText || uploadedImage ? "\n- ALL questions must be answerable from the provided source material." : ""}
 
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
 
@@ -332,7 +387,9 @@ ${sel.map(k=>ti[k]).join("\n\n")}
 Return ONLY the JSON array.`;
 
   try {
-    const res = await fetch(VERCEL_API, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({prompt}) });
+    const body = { prompt };
+    if (uploadedImage) body.image = uploadedImage;
+    const res = await fetch(VERCEL_API, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     const parsed = JSON.parse(data.result.replace(/```json|```/g,"").trim());
@@ -378,8 +435,8 @@ function deleteQ(idx) { questions.splice(idx,1); renderQuestions(); document.get
 
 function startEdit(idx) {
   const q=questions[idx], card=document.getElementById("questions-list").children[idx];
-  const [bg,col]=BCOLORS[q.type];
-  let h=`<div class="q-card-top"><span class="badge" style="background:${bg};color:${col};">${BLABELS[q.type]}</span><span style="font-size:11px;color:#999;">Q${idx+1}</span></div>`;
+  const [bg,col]=BCOLORS[q.type]||["#cec3cf","#2d1a33"];
+  let h=`<div class="q-card-top"><span class="badge" style="background:${bg};color:${col};">${BLABELS[q.type]||q.type}</span><span style="font-size:11px;color:#999;">Q${idx+1}</span></div>`;
   if(q.type==="mcq"){
     h+=`<textarea id="e-q" class="edit-input" rows="3" style="margin-bottom:8px;">${q.question}</textarea>`;
     q.options.forEach((o,i)=>{h+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><input type="radio" name="correct" value="${i}" ${q.correct===i?"checked":""}><input class="edit-input" style="flex:1;" id="e-opt-${i}" value="${o}"></div>`;});
@@ -418,97 +475,6 @@ function exportJSON() {
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-
-function toggleSource() {
-  const section = document.getElementById("source-section");
-  const btn = document.getElementById("source-toggle");
-  if (section.classList.contains("hidden")) {
-    section.classList.remove("hidden");
-    btn.textContent = "− Remove source";
-  } else {
-    section.classList.add("hidden");
-    btn.textContent = "+ Add source";
-    document.getElementById("source-text").value = "";
-    clearFile();
-  }
-}
-
-async function handleFileUpload(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const name = file.name.toLowerCase();
-  const statusEl = document.getElementById("file-status");
-  const nameEl = document.getElementById("file-name");
-
-  nameEl.textContent = "Extracting text from " + file.name + "...";
-  statusEl.classList.remove("hidden");
-  statusEl.style.display = "flex";
-
-  try {
-    let text = "";
-    if (name.endsWith(".pdf")) {
-      text = await extractPDF(file);
-    } else if (name.endsWith(".pptx")) {
-      text = await extractPPTX(file);
-    } else {
-      nameEl.textContent = "Unsupported file type. Please upload a PDF or PPTX.";
-      return;
-    }
-
-    if (!text.trim()) {
-      nameEl.textContent = file.name + " — no text found (may be image-based)";
-      return;
-    }
-
-    document.getElementById("source-text").value = text.trim();
-    nameEl.textContent = file.name + " — text extracted successfully";
-  } catch (e) {
-    nameEl.textContent = "Error reading " + file.name + ": " + e.message;
-  }
-}
-
-async function extractPDF(file) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let text = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const pageText = content.items.map(item => item.str).join(" ");
-    if (pageText.trim()) text += pageText + "\n\n";
-  }
-  return text;
-}
-
-async function extractPPTX(file) {
-  const arrayBuffer = await file.arrayBuffer();
-  const zip = await JSZip.loadAsync(arrayBuffer);
-  let text = "";
-  const slideFiles = Object.keys(zip.files)
-    .filter(f => f.match(/^ppt\/slides\/slide\d+\.xml$/))
-    .sort((a, b) => {
-      const numA = parseInt(a.match(/slide(\d+)/)[1]);
-      const numB = parseInt(b.match(/slide(\d+)/)[1]);
-      return numA - numB;
-    });
-  for (const slidePath of slideFiles) {
-    const xml = await zip.files[slidePath].async("text");
-    const matches = xml.match(/<a:t>([^<]*)<\/a:t>/g);
-    if (matches) {
-      const slideText = matches.map(m => m.replace(/<\/?a:t>/g, "")).join(" ");
-      if (slideText.trim()) text += slideText.trim() + "\n\n";
-    }
-  }
-  return text;
-}
-
-function clearFile() {
-  const statusEl = document.getElementById("file-status");
-  statusEl.classList.add("hidden");
-  statusEl.style.display = "none";
-  document.getElementById("file-upload").value = "";
 }
 
 function setLoading(on) {
