@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Allow requests from your GitHub Pages domain
   const allowedOrigins = [
     "https://wesdlpteam.github.io",
     "http://localhost:5500",
@@ -11,19 +10,31 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // Only allow POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { prompt } = req.body;
+    const { prompt, image } = req.body;
     if (!prompt) return res.status(400).json({ error: "No prompt provided" });
+
+    // Build message content — text only or text + image
+    let content;
+    if (image) {
+      content = [
+        {
+          type: "image_url",
+          image_url: { url: image, detail: "high" }
+        },
+        { type: "text", text: prompt }
+      ];
+    } else {
+      content = prompt;
+    }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -33,7 +44,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content }],
         max_tokens: 4000,
         temperature: 0.7,
       }),
