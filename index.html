@@ -104,15 +104,17 @@
         </div>
         <div id="source-section" class="hidden">
           <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px dashed var(--grey-purple);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--purple);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--grey-purple)'">
-              📄 Upload PDF, PPTX, or Image
-              <input type="file" id="file-upload" accept=".pdf,.pptx,.jpg,.jpeg,.png,.webp" onchange="handleFileUpload(this)" style="display:none;"/>
+            <label id="drop-zone" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px 10px;border:2px dashed var(--grey-purple);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--purple);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--grey-purple)'">
+              📄 Upload or drag & drop files here
+              <span style="font-size:10px;font-weight:400;color:#999;">PDF, PPTX, JPG, PNG, WEBP — multiple files supported</span>
+              <input type="file" id="file-upload" accept=".pdf,.pptx,.jpg,.jpeg,.png,.webp" multiple onchange="handleMultipleFiles(this.files)" style="display:none;"/>
             </label>
           </div>
           <div id="file-status" class="hidden" style="font-size:11px;color:var(--purple);background:var(--light-purple);padding:6px 10px;border-radius:6px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
             <span id="file-name"></span>
-            <button onclick="clearFile()" style="font-size:10px;color:var(--purple);background:none;border:none;cursor:pointer;text-decoration:underline;">Clear</button>
+            <button onclick="clearFile()" style="font-size:10px;color:var(--purple);background:none;border:none;cursor:pointer;text-decoration:underline;">Clear all</button>
           </div>
+          <div id="image-previews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;"></div>
           <textarea id="source-text" class="input" rows="6" placeholder="Or paste text directly here. Uploaded file content will also appear here for review." style="resize:vertical;font-size:12px;line-height:1.5;"></textarea>
           <p style="font-size:10px;color:#999;margin-top:4px;">Questions will be based on this content instead of general knowledge.</p>
         </div>
@@ -170,7 +172,16 @@
 <script>
 const VERCEL_API = "https://wi-se-quiz-gen.vercel.app/api/generate";
 let questions = [];
-let uploadedImage = null;
+let uploadedImages = [];
+
+// Drag and drop setup
+document.addEventListener("DOMContentLoaded", () => {
+  const dz = document.getElementById("drop-zone");
+  if (!dz) return;
+  ["dragenter","dragover"].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.style.borderColor = "var(--purple)"; dz.style.background = "var(--light-purple)"; }));
+  ["dragleave","drop"].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.style.borderColor = "var(--grey-purple)"; dz.style.background = "white"; }));
+  dz.addEventListener("drop", e => { if (e.dataTransfer.files.length) handleMultipleFiles(e.dataTransfer.files); });
+});
 
 const TYPES = [
   { key:"mcq", label:"MCQ – Single Answer", desc:"One correct answer from 4 options", badgeBg:"#4f2759", badgeText:"white", default:true,
@@ -219,23 +230,83 @@ function toggleSource() {
   else { section.classList.add("hidden"); btn.textContent = "+ Add source"; document.getElementById("source-text").value = ""; clearFile(); }
 }
 
-async function handleFileUpload(input) {
-  const file = input.files[0]; if (!file) return;
-  const name = file.name.toLowerCase();
+async function handleMultipleFiles(fileList) {
   const statusEl = document.getElementById("file-status");
   const nameEl = document.getElementById("file-name");
-  nameEl.textContent = "Extracting text from " + file.name + "...";
   statusEl.classList.remove("hidden"); statusEl.style.display = "flex";
-  try {
-    let text = "";
-    if (name.endsWith(".pdf")) { text = await extractPDF(file); }
-    else if (name.endsWith(".pptx")) { text = await extractPPTX(file); }
-    else if (name.match(/\.(jpg|jpeg|png|webp)$/)) { await handleImageUpload(file); nameEl.textContent = file.name + " — image ready for analysis"; return; }
-    else { nameEl.textContent = "Unsupported file type."; return; }
-    if (!text.trim()) { nameEl.textContent = file.name + " — no text found (may be image-based)"; return; }
-    document.getElementById("source-text").value = text.trim();
-    nameEl.textContent = file.name + " — text extracted successfully";
-  } catch (e) { nameEl.textContent = "Error reading " + file.name + ": " + e.message; }
+  nameEl.textContent = "Processing files...";
+
+  let textParts = [];
+  let imageCount = 0;
+  const existingText = document.getElementById("source-text").value.trim();
+
+  for (const file of fileList) {
+    const name = file.name.toLowerCase();
+    try {
+      if (name.endsWith(".pdf")) {
+        const text = await extractPDF(file);
+        if (text.trim()) textParts.push(text.trim());
+        else nameEl.textContent = file.name + " — no text found";
+      } else if (name.endsWith(".pptx")) {
+        const text = await extractPPTX(file);
+        if (text.trim()) textParts.push(text.trim());
+        else nameEl.textContent = file.name + " — no text found";
+      } else if (name.match(/\.(jpg|jpeg|png|webp)$/)) {
+        await addImage(file);
+        imageCount++;
+      }
+    } catch (e) {
+      console.error("Error processing " + file.name, e);
+    }
+  }
+
+  if (textParts.length > 0) {
+    const combined = existingText ? existingText + "\n\n" + textParts.join("\n\n") : textParts.join("\n\n");
+    document.getElementById("source-text").value = combined;
+  }
+
+  const parts = [];
+  if (textParts.length > 0) parts.push(textParts.length + " document(s) extracted");
+  if (imageCount > 0) parts.push(imageCount + " image(s) added");
+  if (uploadedImages.length > 0) parts.push(uploadedImages.length + " total image(s)");
+  nameEl.textContent = parts.length > 0 ? parts.join(" · ") : "No supported files found";
+}
+
+async function addImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      uploadedImages.push(e.target.result);
+      document.getElementById("source-text").placeholder = "Image(s) uploaded — questions will be generated from image content. You can also add extra context here.";
+      renderImagePreviews();
+      resolve();
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImagePreviews() {
+  const container = document.getElementById("image-previews");
+  container.innerHTML = uploadedImages.map((img, i) =>
+    `<div style="position:relative;width:100px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--grey-purple);flex-shrink:0;">
+      <img src="${img}" style="width:100%;height:100%;object-fit:cover;display:block;"/>
+      <button onclick="removeImage(${i})" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);color:white;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>`
+  ).join("");
+}
+
+function removeImage(idx) {
+  uploadedImages.splice(idx, 1);
+  renderImagePreviews();
+  const nameEl = document.getElementById("file-name");
+  if (uploadedImages.length === 0 && !document.getElementById("source-text").value.trim()) {
+    document.getElementById("file-status").classList.add("hidden");
+    document.getElementById("file-status").style.display = "none";
+    document.getElementById("source-text").placeholder = "Or paste text directly here. Uploaded file content will also appear here for review.";
+  } else {
+    nameEl.textContent = uploadedImages.length + " image(s) ready";
+  }
 }
 
 async function extractPDF(file) {
@@ -265,27 +336,11 @@ async function extractPPTX(file) {
   return text;
 }
 
-async function handleImageUpload(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      uploadedImage = e.target.result;
-      document.getElementById("source-text").value = "";
-      document.getElementById("source-text").placeholder = "Image uploaded — questions will be generated from the image content. You can also add extra context here.";
-      let preview = document.getElementById("image-preview");
-      if (!preview) { preview = document.createElement("div"); preview.id = "image-preview"; preview.style.cssText = "margin-bottom:8px;border-radius:10px;overflow:hidden;border:1px solid var(--grey-purple);"; document.getElementById("file-status").after(preview); }
-      preview.innerHTML = `<img src="${uploadedImage}" style="width:100%;max-height:200px;object-fit:cover;display:block;"/>`;
-      resolve();
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 function clearFile() {
   document.getElementById("file-status").classList.add("hidden"); document.getElementById("file-status").style.display = "none";
-  document.getElementById("file-upload").value = ""; uploadedImage = null;
-  const preview = document.getElementById("image-preview"); if (preview) preview.remove();
+  document.getElementById("file-upload").value = ""; uploadedImages = [];
+  document.getElementById("image-previews").innerHTML = "";
+  document.getElementById("source-text").placeholder = "Or paste text directly here. Uploaded file content will also appear here for review.";
 }
 
 function sbUUID() { const s4=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1); return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`; }
@@ -362,8 +417,8 @@ async function generateQuiz() {
 
   const sourceText = document.getElementById("source-text").value.trim();
   let sourceInstruction = "";
-  if (uploadedImage) {
-    sourceInstruction = `\n\nIMPORTANT — IMAGE SOURCE:\nAn image has been provided. Analyse the image carefully and generate ALL questions based on the content, concepts, data, or information visible in the image.${sourceText ? " Additional context: " + sourceText : ""}`;
+  if (uploadedImages.length > 0) {
+    sourceInstruction = `\n\nIMPORTANT — IMAGE SOURCE:\n${uploadedImages.length} image(s) have been provided. Analyse all images carefully and generate ALL questions based on the content, concepts, data, or information visible in the images.${sourceText ? " Additional context: " + sourceText : ""}`;
   } else if (sourceText) {
     sourceInstruction = `\n\nIMPORTANT — SOURCE MATERIAL:\nALL questions MUST be generated directly from this content:\n\n--- SOURCE MATERIAL START ---\n${sourceText}\n--- SOURCE MATERIAL END ---`;
   }
@@ -378,7 +433,7 @@ ${sourceInstruction}
 IMPORTANT:
 - All content must be appropriate for ${yearLevel} students as defined by the Australian Curriculum.
 - Questions should reflect the knowledge, understanding and skills outlined in the relevant ACARA content descriptions.
-- Use Australian English spelling (e.g. colour, analyse, organisation).${sourceText || uploadedImage ? "\n- ALL questions must be answerable from the provided source material." : ""}
+- Use Australian English spelling (e.g. colour, analyse, organisation).${sourceText || uploadedImages.length > 0 ? "\n- ALL questions must be answerable from the provided source material." : ""}
 
 Return ONLY a valid JSON array. No markdown, no backticks, no explanation.
 
@@ -388,7 +443,7 @@ Return ONLY the JSON array.`;
 
   try {
     const body = { prompt };
-    if (uploadedImage) body.image = uploadedImage;
+    if (uploadedImages.length > 0) body.images = uploadedImages;
     const res = await fetch(VERCEL_API, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
