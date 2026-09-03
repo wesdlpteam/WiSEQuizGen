@@ -254,10 +254,19 @@ async function handleMultipleFiles(fileList) {
 
     try {
       if (name.endsWith(".pdf")) {
-        nameEl.textContent = "Extracting text from " + file.name + "...";
+        nameEl.textContent = "Extracting from " + file.name + "...";
         const text = await extractPDF(file);
-        if (text.trim()) textParts.push(text.trim());
-        else skipped.push(file.name + " (no text found — may be scanned/image-based)");
+        if (text === "__SCANNED__") {
+          skipped.push(file.name + " — scanned PDF, pages converted to images");
+          imageCount += uploadedImages.length;
+        } else if (text === "__SCANNED_PARTIAL__") {
+          skipped.push(file.name + " — scanned PDF, first 10 pages converted (large document)");
+          imageCount += uploadedImages.length;
+        } else if (text.trim()) {
+          textParts.push(text.trim());
+        } else {
+          skipped.push(file.name + " (no content found)");
+        }
       } else if (name.endsWith(".pptx")) {
         nameEl.textContent = "Extracting text from " + file.name + "...";
         const text = await extractPPTX(file);
@@ -334,6 +343,8 @@ async function extractPDF(file) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   const ab = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+
+  // First try text extraction
   let text = "";
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -341,7 +352,32 @@ async function extractPDF(file) {
     const pt = content.items.map(item => item.str).join(" ");
     if (pt.trim()) text += pt + "\n\n";
   }
-  return text;
+
+  // If text found, return it
+  if (text.trim()) return text;
+
+  // No text found — render pages as images for vision API
+  const MAX_PAGES = 10;
+  const pagesToRender = Math.min(pdf.numPages, MAX_PAGES);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  for (let i = 1; i <= pagesToRender; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.5 });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    const imgData = canvas.toDataURL("image/jpeg", 0.8);
+    uploadedImages.push(imgData);
+  }
+
+  renderImagePreviews();
+
+  if (pdf.numPages > MAX_PAGES) {
+    return "__SCANNED_PARTIAL__";
+  }
+  return "__SCANNED__";
 }
 
 async function extractPPTX(file) {
