@@ -236,39 +236,60 @@ async function handleMultipleFiles(fileList) {
   statusEl.classList.remove("hidden"); statusEl.style.display = "flex";
   nameEl.textContent = "Processing files...";
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
+  const MAX_TEXT_CHARS = 60000; // ~15,000 words — safe for API limits
+
   let textParts = [];
   let imageCount = 0;
+  let skipped = [];
   const existingText = document.getElementById("source-text").value.trim();
 
   for (const file of fileList) {
     const name = file.name.toLowerCase();
+
+    if (file.size > MAX_FILE_SIZE) {
+      skipped.push(file.name + " (too large — max 10MB)");
+      continue;
+    }
+
     try {
       if (name.endsWith(".pdf")) {
+        nameEl.textContent = "Extracting text from " + file.name + "...";
         const text = await extractPDF(file);
         if (text.trim()) textParts.push(text.trim());
-        else nameEl.textContent = file.name + " — no text found";
+        else skipped.push(file.name + " (no text found — may be scanned/image-based)");
       } else if (name.endsWith(".pptx")) {
+        nameEl.textContent = "Extracting text from " + file.name + "...";
         const text = await extractPPTX(file);
         if (text.trim()) textParts.push(text.trim());
-        else nameEl.textContent = file.name + " — no text found";
+        else skipped.push(file.name + " (no text found)");
       } else if (name.match(/\.(jpg|jpeg|png|webp)$/)) {
+        if (file.size > 4 * 1024 * 1024) {
+          skipped.push(file.name + " (image too large — max 4MB per image)");
+          continue;
+        }
         await addImage(file);
         imageCount++;
       }
     } catch (e) {
-      console.error("Error processing " + file.name, e);
+      skipped.push(file.name + " (error: " + e.message + ")");
     }
   }
 
   if (textParts.length > 0) {
-    const combined = existingText ? existingText + "\n\n" + textParts.join("\n\n") : textParts.join("\n\n");
+    let combined = existingText ? existingText + "\n\n" + textParts.join("\n\n") : textParts.join("\n\n");
+    if (combined.length > MAX_TEXT_CHARS) {
+      combined = combined.substring(0, MAX_TEXT_CHARS);
+      skipped.push("Text was truncated to fit within API limits");
+    }
     document.getElementById("source-text").value = combined;
   }
 
   const parts = [];
   if (textParts.length > 0) parts.push(textParts.length + " document(s) extracted");
   if (imageCount > 0) parts.push(imageCount + " image(s) added");
-  if (uploadedImages.length > 0) parts.push(uploadedImages.length + " total image(s)");
+  if (uploadedImages.length > 0 && imageCount === 0) parts.push(uploadedImages.length + " total image(s)");
+  if (skipped.length > 0) parts.push("⚠️ " + skipped.join("; "));
   nameEl.textContent = parts.length > 0 ? parts.join(" · ") : "No supported files found";
 }
 
