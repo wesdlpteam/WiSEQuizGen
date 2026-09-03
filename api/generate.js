@@ -19,17 +19,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt, image } = req.body;
+    const { prompt, images } = req.body;
     if (!prompt) return res.status(400).json({ error: "No prompt provided" });
 
-    // Build message content — text only or text + image
+    // Build message content — text only, or images + text
     let content;
-    if (image) {
+    if (images && Array.isArray(images) && images.length > 0) {
       content = [
-        {
+        ...images.map(img => ({
           type: "image_url",
-          image_url: { url: image, detail: "high" }
-        },
+          image_url: { url: img, detail: "high" }
+        })),
         { type: "text", text: prompt }
       ];
     } else {
