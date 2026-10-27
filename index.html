@@ -448,7 +448,14 @@ function sbUUID() { const s4=()=>Math.floor((1+Math.random())*0x10000).toString(
 function buildAudioHTML(q) {
   // Build an embedded audio player HTML string if this question has audio attached
   if (q._attachedAudioData) {
-    return `<p><audio controls src="${q._attachedAudioData}" style="width:100%;max-width:400px;">Your browser does not support the audio element.</audio></p>\n`;
+    // Extract mime type and base64 data
+    const mimeMatch = q._attachedAudioData.match(/^data:(audio\/[^;]+);base64,(.+)$/);
+    if (mimeMatch) {
+      const mimeType = mimeMatch[1];
+      // Try multiple approaches so at least one survives School Box's HTML sanitiser
+      return `<p><audio controls><source src="${q._attachedAudioData}" type="${mimeType}"></audio></p>\n`;
+    }
+    return `<p><audio controls><source src="${q._attachedAudioData}" type="audio/mpeg"></audio></p>\n`;
   }
   return "";
 }
