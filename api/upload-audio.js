@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     // Upload to GitHub via Contents API
     const GH_TOKEN = process.env.GH_AUDIO_TOKEN;
     const GH_OWNER = "wesdlpteam";
-    const GH_REPO = "wesdlpteam.github.io";
+    const GH_REPO = "WiSEQuizGen";
     const GH_PATH = "quiz-audio";
 
     const ghRes = await fetch(
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     }
 
     // Return the public GitHub Pages URL
-    const publicURL = `https://${GH_OWNER}.github.io/${GH_PATH}/${uploadName}`;
+    const publicURL = `https://${GH_OWNER}.github.io/WiSEQuizGen/${GH_PATH}/${uploadName}`;
     return res.status(200).json({ url: publicURL });
 
   } catch (e) {
