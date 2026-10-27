@@ -181,6 +181,10 @@
 <script>
 const VERCEL_API = "https://wi-se-quiz-gen.vercel.app/api/generate";
 const TRANSCRIBE_API = "https://wi-se-quiz-gen.vercel.app/api/transcribe";
+
+// Audio upload endpoint (uploads to GitHub via server-side token)
+const UPLOAD_AUDIO_API = "https://wi-se-quiz-gen.vercel.app/api/upload-audio";
+
 let questions = [];
 let uploadedImages = [];
 let audioTranscriptions = [];
@@ -446,18 +450,44 @@ async function extractPPTX(file) {
 function sbUUID() { const s4=()=>Math.floor((1+Math.random())*0x10000).toString(16).slice(1); return `sb-${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`; }
 
 function buildAudioHTML(q) {
-  // Build an embedded audio player HTML string if this question has audio attached
-  if (q._attachedAudioData) {
-    // Extract mime type and base64 data
-    const mimeMatch = q._attachedAudioData.match(/^data:(audio\/[^;]+);base64,(.+)$/);
-    if (mimeMatch) {
-      const mimeType = mimeMatch[1];
-      // Try multiple approaches so at least one survives School Box's HTML sanitiser
-      return `<p><audio controls><source src="${q._attachedAudioData}" type="${mimeType}"></audio></p>\n`;
-    }
-    return `<p><audio controls><source src="${q._attachedAudioData}" type="audio/mpeg"></audio></p>\n`;
+  // Use the GitHub-hosted URL if available (set during export upload)
+  if (q._attachedAudioURL) {
+    return `<p><audio controls src="${q._attachedAudioURL}"></audio></p>\n`;
   }
   return "";
+}
+
+// --- Audio Upload (via Vercel → GitHub) ---
+async function uploadAudioToGitHub(audioData, fileName) {
+  const res = await fetch(UPLOAD_AUDIO_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ audio: audioData, filename: fileName })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.url; // public GitHub Pages URL
+}
+
+async function uploadAllAudioForExport() {
+  // Collect unique audio files that need uploading
+  const needed = new Map(); // audioIdx -> questions that use it
+  questions.forEach(q => {
+    if (typeof q._attachedAudioIdx === "number" && q._attachedAudioIdx >= 0 && q._attachedAudioData) {
+      if (!needed.has(q._attachedAudioIdx)) needed.set(q._attachedAudioIdx, []);
+      needed.get(q._attachedAudioIdx).push(q);
+    }
+  });
+
+  if (needed.size === 0) return; // No audio to upload
+
+  // Upload each unique audio file once, then set the URL on all questions using it
+  for (const [audioIdx, qs] of needed) {
+    const audio = audioTranscriptions[audioIdx];
+    if (!audio) continue;
+    const url = await uploadAudioToGitHub(audio.audioData, audio.name);
+    qs.forEach(q => { q._attachedAudioURL = url; });
+  }
 }
 
 function buildSchoolBoxJSON(qs, topic) {
@@ -710,8 +740,28 @@ function saveEdit(idx) {
   renderQuestions();
 }
 
-function exportJSON() {
+async function exportJSON() {
   const topic=document.getElementById("topic").value.trim();
+  const hasAudioAttached = questions.some(q => typeof q._attachedAudioIdx === "number" && q._attachedAudioIdx >= 0);
+
+  if (hasAudioAttached) {
+    // Show uploading state
+    const exportBtn = document.querySelector(".btn-gold");
+    const origText = exportBtn.textContent;
+    exportBtn.textContent = "⏳ Uploading audio...";
+    exportBtn.disabled = true;
+    try {
+      await uploadAllAudioForExport();
+    } catch (e) {
+      showError("Audio upload failed: " + e.message);
+      exportBtn.textContent = origText;
+      exportBtn.disabled = false;
+      return;
+    }
+    exportBtn.textContent = origText;
+    exportBtn.disabled = false;
+  }
+
   const payload=buildSchoolBoxJSON(questions,topic);
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`${topic.replace(/\s+/g,"_")}_quiz.json`;
